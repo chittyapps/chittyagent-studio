@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,3 +16,61 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+export const agents = pgTable("agents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull().default("bot"),
+  color: text("color").notNull().default("#4285f4"),
+  status: text("status").notNull().default("draft"),
+  triggerType: text("trigger_type").notNull().default("manual"),
+  triggerConfig: jsonb("trigger_config").$type<Record<string, unknown>>().default({}),
+  actions: jsonb("actions").$type<AgentAction[]>().default([]),
+  prompt: text("prompt").notNull().default(""),
+  category: text("category").notNull().default("general"),
+  isTemplate: boolean("is_template").notNull().default(false),
+  runsCount: integer("runs_count").notNull().default(0),
+  lastRunAt: timestamp("last_run_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export interface AgentAction {
+  id: string;
+  type: string;
+  label: string;
+  config: Record<string, unknown>;
+}
+
+export const insertAgentSchema = createInsertSchema(agents).omit({
+  id: true,
+  runsCount: true,
+  lastRunAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAgent = z.infer<typeof insertAgentSchema>;
+export type Agent = typeof agents.$inferSelect;
+
+export const agentRuns = pgTable("agent_runs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  agentId: varchar("agent_id").notNull(),
+  status: text("status").notNull().default("running"),
+  triggerInfo: text("trigger_info").notNull().default("Manual trigger"),
+  result: text("result"),
+  stepsCompleted: integer("steps_completed").notNull().default(0),
+  totalSteps: integer("total_steps").notNull().default(1),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertAgentRunSchema = createInsertSchema(agentRuns).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export type InsertAgentRun = z.infer<typeof insertAgentRunSchema>;
+export type AgentRun = typeof agentRuns.$inferSelect;
