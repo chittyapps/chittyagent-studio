@@ -1,6 +1,6 @@
 # ChittyAgent Studio
 
-A no-code AI agent builder platform (inspired by Google Workspace Studio) where users can create, manage, and run AI-powered workflow agents.
+A no-code AI agent builder platform for the ChittyOS ecosystem (chitty.cc/os, github.com/chittyos). Users can create workflow agents and add reusable skills from ChittyOS services like ChittyScore, ChittyVerify, ChittyIntel, and more.
 
 ## Architecture
 
@@ -12,8 +12,10 @@ A no-code AI agent builder platform (inspired by Google Workspace Studio) where 
 
 ## Data Models
 
-- **agents**: AI agents with name, description, prompt, icon, color, trigger type, category, status, run count
+- **agents**: AI agents with name, description, prompt, icon, color, trigger type, category, status, run count, skillIds
 - **agentRuns**: Execution history for each agent with status, result, steps
+- **skills**: Reusable ChittyOS ecosystem capabilities (ChittyScore, ChittyVerify, etc.) with name, description, icon, category, repoUrl, language, capabilities array, installCount
+- **githubRepos**: Cached ChittyOS GitHub organization repos with name, description, language, stars, forks, htmlUrl
 - **users**: Basic user model (unused currently)
 
 Templates are stored as agents with `isTemplate: true`.
@@ -22,12 +24,14 @@ Templates are stored as agents with `isTemplate: true`.
 
 | Route | Component | Description |
 |---|---|---|
-| `/` | Home | Dashboard with user agents and template gallery |
+| `/` | Home | Dashboard with user agents, ecosystem skills preview, template gallery |
 | `/agents/new` | AgentBuilder | Create new agent form |
 | `/agents/:id` | AgentDetail | Agent details, stats, run history, actions |
 | `/agents/:id/edit` | AgentBuilder | Edit existing agent |
 | `/templates` | Templates | Template library with category filters |
 | `/templates/:id` | TemplateDetail | Template details with "Use template" action |
+| `/skills` | Skills | ChittyOS ecosystem skills with category filters, install action |
+| `/repos` | Repos | ChittyOS GitHub repositories browser |
 
 ## API Endpoints
 
@@ -43,10 +47,20 @@ Templates are stored as agents with `isTemplate: true`.
 | GET | `/api/templates` | List templates |
 | GET | `/api/templates/:id` | Get template details |
 | POST | `/api/templates/:id/use` | Create agent from template |
+| GET | `/api/skills` | List ecosystem skills |
+| GET | `/api/skills/:id` | Get skill details |
+| POST | `/api/skills/:id/install` | Increment skill install count |
+| GET | `/api/github/repos` | List ChittyOS GitHub repos |
+
+## Seed Data
+
+- 8 agent templates across categories: email, productivity, communication, data, HR, sales, support
+- 14 ChittyOS ecosystem skills: ChittyScore, ChittyVerify, ChittyIntel, ChittyBeacon, ChittyMonitor, ChittyLedger, ChittyChronicle, ChittyScrape, ChittyMCP, ChittyRouter, ChittyConnect, ChittyAssets, ChittyConcierge, ChittyTrack
+- 25 GitHub repos from the chittyos organization
 
 ## Key Components
 
-- `AppHeader` - Top navigation with search, theme toggle, create button
+- `AppHeader` - Top navigation with Skills, Repos, search, theme toggle, create button
 - `AgentCard` / `TemplateCard` - Card components for agents/templates
 - `ThemeProvider` - Light/dark mode support
 - `RunHistory` - Agent execution history display
@@ -57,4 +71,5 @@ Templates are stored as agents with `isTemplate: true`.
 - Font: Plus Jakarta Sans
 - Primary color: Blue (#4285f4)
 - Dark mode supported via class-based toggling
-- 8 seed templates across categories: email, productivity, communication, data, HR, sales, support
+- No hover:bg-* on buttons; use hover-elevate system
+- No emoji in UI

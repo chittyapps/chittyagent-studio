@@ -1,11 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { type Agent } from "@shared/schema";
+import { type Agent, type Skill } from "@shared/schema";
 import { AgentCard, AgentCardSkeleton } from "@/components/agent-card";
 import { TemplateCard, TemplateCardSkeleton } from "@/components/template-card";
 import { EmptyState } from "@/components/empty-state";
-import { Sparkles, LayoutGrid, ArrowRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Sparkles, LayoutGrid, ArrowRight, Puzzle,
+  Bot, Mail, FileText, Calendar, MessageSquare, Search,
+  Zap, Shield, BarChart3, Users
+} from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  bot: Bot, mail: Mail, file: FileText, calendar: Calendar,
+  message: MessageSquare, search: Search, zap: Zap, shield: Shield,
+  chart: BarChart3, users: Users, puzzle: Puzzle,
+};
 
 export default function Home() {
   const [, navigate] = useLocation();
@@ -16,6 +28,10 @@ export default function Home() {
 
   const { data: templates, isLoading: templatesLoading } = useQuery<Agent[]>({
     queryKey: ["/api/templates"],
+  });
+
+  const { data: allSkills, isLoading: skillsLoading } = useQuery<Skill[]>({
+    queryKey: ["/api/skills"],
   });
 
   const myAgents = agents?.filter((a) => !a.isTemplate) || [];
@@ -61,6 +77,69 @@ export default function Home() {
       ) : (
         <EmptyState />
       )}
+
+      <section className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Puzzle className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              Ecosystem Skills
+            </h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/skills")}
+            className="text-xs"
+            data-testid="button-view-skills"
+          >
+            View all <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+        </div>
+
+        {skillsLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="p-3">
+                <div className="animate-pulse flex items-center gap-2">
+                  <div className="w-8 h-8 rounded bg-muted" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-muted rounded w-2/3" />
+                    <div className="h-2 bg-muted rounded w-1/2" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {allSkills?.slice(0, 10).map((skill) => {
+              const IconComponent = iconMap[skill.icon] || Puzzle;
+              return (
+                <Card
+                  key={skill.id}
+                  className="p-3 cursor-pointer hover-elevate transition-all"
+                  onClick={() => navigate("/skills")}
+                  data-testid={`card-skill-${skill.id}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-8 h-8 rounded flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: skill.color + "18", color: skill.color }}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium truncate">{skill.name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{skill.category}</p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <section>
         <div className="flex items-center justify-between mb-4">

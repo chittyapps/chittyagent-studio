@@ -23,6 +23,8 @@ function Router() {
       <Route path="/agents/:id" component={AgentDetail} />
       <Route path="/templates" component={Templates} />
       <Route path="/templates/:id" component={TemplateDetail} />
+      <Route path="/skills" component={Skills} />
+      <Route path="/repos" component={Repos} />
       <Route component={NotFound} />
     </Switch>
   );
