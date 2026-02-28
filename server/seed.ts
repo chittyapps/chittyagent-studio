@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { agents } from "@shared/schema";
+import { agents, skills, githubRepos } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const templateData = [
@@ -93,23 +93,249 @@ const templateData = [
   },
 ];
 
+const skillsData = [
+  {
+    name: "ChittyScore",
+    description: "6D Behavioral Trust Scoring Engine. Analyzes trust across Source, Temporal, Channel, Outcome, Network, and Justice dimensions.",
+    icon: "shield",
+    color: "#4285f4",
+    category: "trust",
+    repoUrl: "https://github.com/chittyos/chittyscore",
+    repoName: "chittyscore",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Trust scoring", "Behavioral analysis", "6D evaluation", "Risk assessment"],
+    status: "available",
+  },
+  {
+    name: "ChittyVerify",
+    description: "Document and identity verification service for secure authentication and compliance checks.",
+    icon: "shield",
+    color: "#34a853",
+    category: "verification",
+    repoUrl: "https://github.com/chittyos/chittyverify",
+    repoName: "chittyverify",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Document verification", "Identity checks", "Compliance validation", "KYC/KYB"],
+    status: "available",
+  },
+  {
+    name: "ChittyIntel",
+    description: "AI-powered case intelligence with fact extraction, contradiction detection, and timeline construction.",
+    icon: "search",
+    color: "#8b5cf6",
+    category: "intelligence",
+    repoUrl: "https://github.com/chittyos/chittyintel",
+    repoName: "chittyintel",
+    language: "JavaScript",
+    isEcosystem: true,
+    capabilities: ["Fact extraction", "Contradiction detection", "Timeline construction", "Case analysis"],
+    status: "available",
+  },
+  {
+    name: "ChittyBeacon",
+    description: "Service discovery and health monitoring for distributed systems and microservices.",
+    icon: "zap",
+    color: "#f97316",
+    category: "monitoring",
+    repoUrl: "https://github.com/chittyos/chittybeacon",
+    repoName: "chittybeacon",
+    language: "JavaScript",
+    isEcosystem: true,
+    capabilities: ["Service discovery", "Health checks", "Uptime monitoring", "Alert routing"],
+    status: "available",
+  },
+  {
+    name: "ChittyMonitor",
+    description: "System monitoring and performance tracking with real-time metrics and anomaly detection.",
+    icon: "chart",
+    color: "#ea4335",
+    category: "monitoring",
+    repoUrl: "https://github.com/chittyos/chittymonitor",
+    repoName: "chittymonitor",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Performance tracking", "Real-time metrics", "Anomaly detection", "System health"],
+    status: "available",
+  },
+  {
+    name: "ChittyLedger",
+    description: "Distributed ledger for transaction tracking with immutable audit trails and reconciliation.",
+    icon: "file",
+    color: "#06b6d4",
+    category: "data",
+    repoUrl: "https://github.com/chittyos/chittyledger",
+    repoName: "chittyledger",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Transaction tracking", "Audit trails", "Reconciliation", "Ledger management"],
+    status: "available",
+  },
+  {
+    name: "ChittyChronicle",
+    description: "Legal timeline management for evidentiary tracking and litigation support workflows.",
+    icon: "calendar",
+    color: "#ec4899",
+    category: "legal",
+    repoUrl: "https://github.com/chittyos/chittychronicle",
+    repoName: "chittychronicle",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Timeline management", "Evidence tracking", "Litigation support", "Case management"],
+    status: "available",
+  },
+  {
+    name: "ChittyScrape",
+    description: "Browser automation scraper service for data extraction and web monitoring tasks.",
+    icon: "search",
+    color: "#fbbc04",
+    category: "automation",
+    repoUrl: "https://github.com/chittyos/chittyscrape",
+    repoName: "chittyscrape",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Web scraping", "Data extraction", "Browser automation", "Content monitoring"],
+    status: "available",
+  },
+  {
+    name: "ChittyMCP",
+    description: "Multi-Tenant Model Context Protocol Server with OAuth, rate limiting, analytics, and 44+ tools.",
+    icon: "bot",
+    color: "#4285f4",
+    category: "ai",
+    repoUrl: "https://github.com/chittyos/chittymcp",
+    repoName: "chittymcp",
+    language: "JavaScript",
+    isEcosystem: true,
+    capabilities: ["MCP server", "Multi-tenant", "OAuth", "44+ tools", "Rate limiting"],
+    status: "available",
+  },
+  {
+    name: "ChittyRouter",
+    description: "Intelligent AI routing service for multi-model gateway with automatic model selection.",
+    icon: "zap",
+    color: "#8b5cf6",
+    category: "ai",
+    repoUrl: "https://github.com/chittyos/chittyrouter",
+    repoName: "chittyrouter",
+    language: "JavaScript",
+    isEcosystem: true,
+    capabilities: ["AI routing", "Multi-model gateway", "Model selection", "Load balancing"],
+    status: "available",
+  },
+  {
+    name: "ChittyConnect",
+    description: "Universal context management for user, project, and session contexts with inheritance and materialization.",
+    icon: "users",
+    color: "#34a853",
+    category: "utility",
+    repoUrl: "https://github.com/chittyos/chittyconnect",
+    repoName: "chittyconnect",
+    language: "JavaScript",
+    isEcosystem: true,
+    capabilities: ["Context management", "Session tracking", "State inheritance", "Materialization"],
+    status: "available",
+  },
+  {
+    name: "ChittyAssets",
+    description: "Blockchain-integrated asset management system with ownership proof and dashboard filtering.",
+    icon: "file",
+    color: "#f97316",
+    category: "data",
+    repoUrl: "https://github.com/chittyos/chittyassets",
+    repoName: "chittyassets",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Asset management", "Blockchain integration", "Ownership proof", "Dashboard filtering"],
+    status: "available",
+  },
+  {
+    name: "ChittyConcierge",
+    description: "AI-powered communication orchestrator for multi-channel messaging and notification management.",
+    icon: "message",
+    color: "#06b6d4",
+    category: "communication",
+    repoUrl: "https://github.com/chittyos/chittyconcierge",
+    repoName: "chittyconcierge",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Communication orchestration", "Multi-channel", "Notification management", "AI responses"],
+    status: "available",
+  },
+  {
+    name: "ChittyTrack",
+    description: "Centralized observability for logs, metrics, and traces via Cloudflare Tail Workers.",
+    icon: "chart",
+    color: "#ea4335",
+    category: "monitoring",
+    repoUrl: "https://github.com/chittyos/chittytrack",
+    repoName: "chittytrack",
+    language: "TypeScript",
+    isEcosystem: true,
+    capabilities: ["Log aggregation", "Metrics collection", "Distributed tracing", "Observability"],
+    status: "available",
+  },
+];
+
+const chittyosRepos = [
+  { name: "chittyscore", fullName: "chittyos/chittyscore", description: "6D Behavioral Trust Scoring Engine for ChittyOS", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyscore", stars: 0, forks: 0 },
+  { name: "chittyverify", fullName: "chittyos/chittyverify", description: "Document and identity verification service", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyverify", stars: 0, forks: 0 },
+  { name: "chittybeacon", fullName: "chittyos/chittybeacon", description: "Service discovery and health monitoring", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittybeacon", stars: 0, forks: 0 },
+  { name: "chittyops", fullName: "chittyos/chittyops", description: "Standardized CI/CD workflows with ChittyBeacon integration", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittyops", stars: 0, forks: 0 },
+  { name: "chittyassets", fullName: "chittyos/chittyassets", description: "Blockchain-integrated asset management system", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyassets", stars: 0, forks: 0 },
+  { name: "chittyledger", fullName: "chittyos/chittyledger", description: "Distributed ledger for transaction tracking", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyledger", stars: 0, forks: 0 },
+  { name: "chittymonitor", fullName: "chittyos/chittymonitor", description: "System monitoring and performance tracking", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittymonitor", stars: 0, forks: 0 },
+  { name: "chittychronicle", fullName: "chittyos/chittychronicle", description: "Legal timeline management for evidentiary tracking", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittychronicle", stars: 0, forks: 0 },
+  { name: "chittycore", fullName: "chittyos/chittycore", description: "Essential foundation package with ID, auth, verification, beacon tracking", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittycore", stars: 0, forks: 0 },
+  { name: "chittyos-cli", fullName: "chittyos/chittyos-cli", description: "Unified CLI with AI intelligence and system integration", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittyos-cli", stars: 0, forks: 0 },
+  { name: "chittygateway", fullName: "chittyos/chittygateway", description: "Unified Cloudflare Worker consolidating all services", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittygateway", stars: 0, forks: 0 },
+  { name: "chittyregistry", fullName: "chittyos/chittyregistry", description: "Universal tool/script registry for ChittyOS ecosystem", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyregistry", stars: 0, forks: 0 },
+  { name: "chittyrouter", fullName: "chittyos/chittyrouter", description: "Intelligent AI routing service for ChittyOS platform", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittyrouter", stars: 0, forks: 0 },
+  { name: "chittyconnect", fullName: "chittyos/chittyconnect", description: "Universal context management with inheritance and materialization", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittyconnect", stars: 0, forks: 0 },
+  { name: "chittymcp", fullName: "chittyos/chittymcp", description: "Multi-Tenant MCP Server with OAuth, rate limiting, 44+ tools", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittymcp", stars: 0, forks: 0 },
+  { name: "chittyintel", fullName: "chittyos/chittyintel", description: "AI-powered legal fact extraction and contradiction detection", language: "JavaScript", htmlUrl: "https://github.com/chittyos/chittyintel", stars: 0, forks: 0 },
+  { name: "chittyscrape", fullName: "chittyos/chittyscrape", description: "Browser automation scraper service", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyscrape", stars: 0, forks: 0 },
+  { name: "chittyconcierge", fullName: "chittyos/chittyconcierge", description: "AI-powered communication orchestrator", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittyconcierge", stars: 0, forks: 0 },
+  { name: "chittycommand", fullName: "chittyos/chittycommand", description: "Unified life management & action dashboard", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittycommand", stars: 0, forks: 0 },
+  { name: "chittytrack", fullName: "chittyos/chittytrack", description: "Centralized observability via Cloudflare Tail Workers", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittytrack", stars: 0, forks: 0 },
+  { name: "get-chitty", fullName: "chittyos/get-chitty", description: "ChittyOS multi-model AI gateway", language: "TypeScript", htmlUrl: "https://github.com/chittyos/get-chitty", stars: 0, forks: 0 },
+  { name: "chittycan", fullName: "chittyos/chittycan", description: "Autonomous network with natural language commands and DNA vaults", language: "TypeScript", htmlUrl: "https://github.com/chittyos/chittycan", stars: 0, forks: 0 },
+  { name: "sessionsync", fullName: "chittyos/sessionsync", description: "Self-evolving AI cross-session coordination system", language: "TypeScript", htmlUrl: "https://github.com/chittyos/sessionsync", stars: 0, forks: 0 },
+  { name: "shared", fullName: "chittyos/shared", description: "Consolidated shared dependencies for all ChittyOS components", language: "TypeScript", htmlUrl: "https://github.com/chittyos/shared", stars: 0, forks: 0 },
+  { name: "docs", fullName: "chittyos/docs", description: "Official docs and guides for the legal technology ecosystem", language: "HTML", htmlUrl: "https://github.com/chittyos/docs", stars: 0, forks: 0 },
+];
+
 export async function seedDatabase() {
   try {
-    const existing = await db.select().from(agents).where(eq(agents.isTemplate, true));
-    if (existing.length > 0) {
-      console.log("Templates already seeded, skipping...");
-      return;
+    const existingTemplates = await db.select().from(agents).where(eq(agents.isTemplate, true));
+    if (existingTemplates.length === 0) {
+      for (const template of templateData) {
+        await db.insert(agents).values({
+          ...template,
+          triggerConfig: {},
+          actions: [],
+          skillIds: [],
+        });
+      }
+      console.log(`Seeded ${templateData.length} templates`);
     }
 
-    for (const template of templateData) {
-      await db.insert(agents).values({
-        ...template,
-        triggerConfig: {},
-        actions: [],
-      });
+    const existingSkills = await db.select().from(skills);
+    if (existingSkills.length === 0) {
+      for (const skill of skillsData) {
+        await db.insert(skills).values(skill);
+      }
+      console.log(`Seeded ${skillsData.length} skills`);
     }
 
-    console.log(`Seeded ${templateData.length} templates`);
+    const existingRepos = await db.select().from(githubRepos);
+    if (existingRepos.length === 0) {
+      for (const repo of chittyosRepos) {
+        await db.insert(githubRepos).values(repo);
+      }
+      console.log(`Seeded ${chittyosRepos.length} GitHub repos`);
+    }
   } catch (error) {
     console.error("Error seeding database:", error);
   }

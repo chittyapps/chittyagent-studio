@@ -14,6 +14,7 @@ const createAgentSchema = z.object({
   triggerConfig: z.record(z.unknown()).default({}),
   actions: z.array(z.unknown()).default([]),
   category: z.string().default("general"),
+  skillIds: z.array(z.string()).default([]),
 });
 
 const updateAgentSchema = z.object({
@@ -27,6 +28,7 @@ const updateAgentSchema = z.object({
   triggerConfig: z.record(z.unknown()).optional(),
   actions: z.array(z.unknown()).optional(),
   category: z.string().optional(),
+  skillIds: z.array(z.string()).optional(),
 });
 
 export async function registerRoutes(
@@ -59,9 +61,8 @@ export async function registerRoutes(
       if (!parsed.success) {
         return res.status(400).json({ message: parsed.error.issues.map(i => i.message).join(", ") });
       }
-      const data = parsed.data;
       const agent = await storage.createAgent({
-        ...data,
+        ...parsed.data,
         isTemplate: false,
       });
       res.status(201).json(agent);
@@ -172,9 +173,49 @@ export async function registerRoutes(
         triggerConfig: template.triggerConfig as Record<string, unknown> || {},
         actions: template.actions as any[] || [],
         category: template.category,
+        skillIds: template.skillIds || [],
         isTemplate: false,
       });
       res.status(201).json(agent);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/skills", async (_req, res) => {
+    try {
+      const allSkills = await storage.getSkills();
+      res.json(allSkills);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/skills/:id", async (req, res) => {
+    try {
+      const skill = await storage.getSkill(req.params.id);
+      if (!skill) return res.status(404).json({ message: "Skill not found" });
+      res.json(skill);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/skills/:id/install", async (req, res) => {
+    try {
+      const skill = await storage.getSkill(req.params.id);
+      if (!skill) return res.status(404).json({ message: "Skill not found" });
+      await storage.incrementSkillInstall(req.params.id);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/github/repos", async (_req, res) => {
+    try {
+      const repos = await storage.getGithubRepos();
+      res.json(repos);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
     }

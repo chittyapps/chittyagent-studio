@@ -10,6 +10,8 @@ import AgentDetail from "@/pages/agent-detail";
 import AgentBuilder from "@/pages/agent-builder";
 import Templates from "@/pages/templates";
 import TemplateDetail from "@/pages/template-detail";
+import Skills from "@/pages/skills";
+import Repos from "@/pages/repos";
 import NotFound from "@/pages/not-found";
 
 function Router() {

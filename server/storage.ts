@@ -2,11 +2,12 @@ import {
   type User, type InsertUser,
   type Agent, type InsertAgent,
   type AgentRun, type InsertAgentRun,
-  users, agents, agentRuns,
+  type Skill, type InsertSkill,
+  type GithubRepo, type InsertGithubRepo,
+  users, agents, agentRuns, skills, githubRepos,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -25,8 +26,16 @@ export interface IStorage {
   getAgentRuns(agentId: string): Promise<AgentRun[]>;
   createAgentRun(run: InsertAgentRun): Promise<AgentRun>;
   updateAgentRun(id: string, data: Partial<AgentRun>): Promise<AgentRun | undefined>;
-
   incrementRunCount(agentId: string): Promise<void>;
+
+  getSkills(): Promise<Skill[]>;
+  getSkill(id: string): Promise<Skill | undefined>;
+  createSkill(skill: InsertSkill): Promise<Skill>;
+  incrementSkillInstall(id: string): Promise<void>;
+
+  getGithubRepos(): Promise<GithubRepo[]>;
+  createGithubRepo(repo: InsertGithubRepo): Promise<GithubRepo>;
+  clearGithubRepos(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -116,6 +125,43 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(agents.id, agentId));
     }
+  }
+
+  async getSkills(): Promise<Skill[]> {
+    return db.select().from(skills).orderBy(desc(skills.installCount));
+  }
+
+  async getSkill(id: string): Promise<Skill | undefined> {
+    const [skill] = await db.select().from(skills).where(eq(skills.id, id));
+    return skill;
+  }
+
+  async createSkill(data: InsertSkill): Promise<Skill> {
+    const [skill] = await db.insert(skills).values(data).returning();
+    return skill;
+  }
+
+  async incrementSkillInstall(id: string): Promise<void> {
+    const skill = await this.getSkill(id);
+    if (skill) {
+      await db
+        .update(skills)
+        .set({ installCount: skill.installCount + 1 })
+        .where(eq(skills.id, id));
+    }
+  }
+
+  async getGithubRepos(): Promise<GithubRepo[]> {
+    return db.select().from(githubRepos).orderBy(githubRepos.name);
+  }
+
+  async createGithubRepo(data: InsertGithubRepo): Promise<GithubRepo> {
+    const [repo] = await db.insert(githubRepos).values(data).returning();
+    return repo;
+  }
+
+  async clearGithubRepos(): Promise<void> {
+    await db.delete(githubRepos);
   }
 }
 
