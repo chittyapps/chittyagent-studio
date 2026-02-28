@@ -1,11 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { type GithubRepo } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, ExternalLink, GitFork, Star, Search
+  ArrowLeft, ExternalLink, GitFork, Star, Search, RefreshCw, Loader2
 } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 import { useState } from "react";
@@ -21,7 +23,23 @@ const langColors: Record<string, string> = {
 
 export default function Repos() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/github/sync");
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/github/repos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      toast({ title: "Repos synced", description: `Synced ${data.count} repos from GitHub` });
+    },
+    onError: () => {
+      toast({ title: "Sync failed", description: "Could not fetch repos from GitHub", variant: "destructive" });
+    },
+  });
 
   const { data: repos, isLoading } = useQuery<GithubRepo[]>({
     queryKey: ["/api/github/repos"],
@@ -45,12 +63,28 @@ export default function Repos() {
         <ArrowLeft className="w-4 h-4 mr-1" /> Back
       </Button>
 
-      <div className="flex items-center gap-3 mb-2">
-        <SiGithub className="w-5 h-5" />
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">ChittyOS Repositories</h1>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <SiGithub className="w-5 h-5" />
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">ChittyOS Repositories</h1>
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => syncMutation.mutate()}
+          disabled={syncMutation.isPending}
+          data-testid="button-sync-repos"
+        >
+          {syncMutation.isPending ? (
+            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />
+          )}
+          Sync from GitHub
+        </Button>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Open-source components powering the ChittyOS ecosystem
+        Live data from the ChittyOS GitHub organization
       </p>
 
       <div className="relative max-w-md mb-6">

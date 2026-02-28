@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { syncGithubRepos } from "./seed";
 import { z } from "zod";
 
 const createAgentSchema = z.object({
@@ -216,6 +217,16 @@ export async function registerRoutes(
     try {
       const repos = await storage.getGithubRepos();
       res.json(repos);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/github/sync", async (_req, res) => {
+    try {
+      await syncGithubRepos();
+      const repos = await storage.getGithubRepos();
+      res.json({ success: true, count: repos.length });
     } catch (err: any) {
       res.status(500).json({ message: err.message });
     }
