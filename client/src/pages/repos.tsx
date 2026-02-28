@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { type GithubRepo } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +11,7 @@ import {
   ArrowLeft, ExternalLink, GitFork, Star, Search, RefreshCw, Loader2
 } from "lucide-react";
 import { SiGithub } from "react-icons/si";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const langColors: Record<string, string> = {
   TypeScript: "#3178c6",
@@ -21,10 +22,19 @@ const langColors: Record<string, string> = {
   HTML: "#e34c26",
 };
 
+const orgLabels: Record<string, string> = {
+  all: "All Orgs",
+  chittyos: "chittyos",
+  chittyfoundation: "chittyfoundation",
+  chittyapps: "chittyapps",
+  "furnished-condos": "furnished-condos",
+};
+
 export default function Repos() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeOrg, setActiveOrg] = useState("all");
 
   const syncMutation = useMutation({
     mutationFn: async () => {
@@ -45,11 +55,29 @@ export default function Repos() {
     queryKey: ["/api/github/repos"],
   });
 
-  const filtered = repos?.filter((r) =>
-    !searchQuery ||
-    r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const availableOrgs = useMemo(() => {
+    if (!repos) return [];
+    const orgs = new Set(repos.map((r) => r.org));
+    return Array.from(orgs).sort();
+  }, [repos]);
+
+  const filtered = repos?.filter((r) => {
+    if (activeOrg !== "all" && r.org !== activeOrg) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return r.name.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const orgCounts = useMemo(() => {
+    if (!repos) return {};
+    const counts: Record<string, number> = {};
+    for (const r of repos) {
+      counts[r.org] = (counts[r.org] || 0) + 1;
+    }
+    return counts;
+  }, [repos]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
@@ -66,7 +94,10 @@ export default function Repos() {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <SiGithub className="w-5 h-5" />
-          <h1 className="text-2xl font-bold" data-testid="text-page-title">ChittyOS Repositories</h1>
+          <h1 className="text-2xl font-bold" data-testid="text-page-title">Repositories</h1>
+          {repos && (
+            <Badge variant="secondary" className="text-xs">{repos.length} repos</Badge>
+          )}
         </div>
         <Button
           size="sm"
@@ -84,8 +115,30 @@ export default function Repos() {
         </Button>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Live data from the ChittyOS GitHub organization
+        Live data from the ChittyOS ecosystem GitHub organizations
       </p>
+
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <Button
+          size="sm"
+          variant={activeOrg === "all" ? "default" : "secondary"}
+          onClick={() => setActiveOrg("all")}
+          data-testid="button-org-all"
+        >
+          All ({repos?.length || 0})
+        </Button>
+        {availableOrgs.map((org) => (
+          <Button
+            key={org}
+            size="sm"
+            variant={activeOrg === org ? "default" : "secondary"}
+            onClick={() => setActiveOrg(org)}
+            data-testid={`button-org-${org}`}
+          >
+            {orgLabels[org] || org} ({orgCounts[org] || 0})
+          </Button>
+        ))}
+      </div>
 
       <div className="relative max-w-md mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -122,9 +175,12 @@ export default function Repos() {
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-sm text-primary truncate">
-                    {repo.name}
-                  </h3>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-sm text-primary truncate">
+                      {repo.name}
+                    </h3>
+                    <span className="text-[10px] text-muted-foreground">{repo.org}</span>
+                  </div>
                   <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">

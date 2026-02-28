@@ -109,6 +109,7 @@ export const githubRepos = pgTable("github_repos", {
   description: text("description"),
   language: text("language"),
   htmlUrl: text("html_url").notNull(),
+  org: text("org").notNull().default("chittyos"),
   stars: integer("stars").notNull().default(0),
   forks: integer("forks").notNull().default(0),
   updatedAt: timestamp("updated_at"),

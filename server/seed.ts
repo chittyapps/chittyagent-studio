@@ -305,9 +305,151 @@ const skillMappings: Record<string, SkillMapping> = {
     category: "utility",
     capabilities: ["Helper utilities", "System tools"],
   },
+  chittyid: {
+    repoName: "chittyid",
+    icon: "shield",
+    color: "#4285f4",
+    category: "trust",
+    capabilities: ["Identity management", "User identity", "Auth tokens"],
+  },
+  chittychain: {
+    repoName: "chittychain",
+    icon: "shield",
+    color: "#8b5cf6",
+    category: "data",
+    capabilities: ["Blockchain", "Distributed ledger", "Foundation chain"],
+  },
+  "chitty-ops-foundation": {
+    repoName: "chitty-ops-foundation",
+    icon: "zap",
+    color: "#34a853",
+    category: "utility",
+    capabilities: ["Infrastructure", "Terminal operations", "Hookification"],
+  },
+  chittyfinance: {
+    repoName: "chittyfinance",
+    icon: "chart",
+    color: "#34a853",
+    category: "data",
+    capabilities: ["Financial operations", "AI-powered CFO", "Automated finance"],
+  },
+  chittydlvr: {
+    repoName: "chittydlvr",
+    icon: "file",
+    color: "#f97316",
+    category: "verification",
+    capabilities: ["Certified delivery", "Proof of delivery", "Chain of custody"],
+  },
+  documint: {
+    repoName: "documint",
+    icon: "file",
+    color: "#06b6d4",
+    category: "legal",
+    capabilities: ["Document signing", "ChittyProof", "11-pillar proof", "Permanent records"],
+  },
+  "chittyauth-app": {
+    repoName: "chittyauth-app",
+    icon: "shield",
+    color: "#ea4335",
+    category: "trust",
+    capabilities: ["Authentication", "Token provisioning", "OAuth"],
+  },
+  chittytrace: {
+    repoName: "chittytrace",
+    icon: "search",
+    color: "#ec4899",
+    category: "legal",
+    capabilities: ["Evidence tracking", "Litigation support", "Document processing"],
+  },
+  chittyreception: {
+    repoName: "chittyreception",
+    icon: "users",
+    color: "#4285f4",
+    category: "communication",
+    capabilities: ["Reception management", "Visitor tracking"],
+  },
+  chittylanding: {
+    repoName: "chittylanding",
+    icon: "puzzle",
+    color: "#8b5cf6",
+    category: "utility",
+    capabilities: ["Landing page", "Web3 business OS"],
+  },
+  chittyinsight: {
+    repoName: "chittyinsight",
+    icon: "search",
+    color: "#34a853",
+    category: "intelligence",
+    capabilities: ["Business insights", "Data analysis"],
+  },
+  chittyformfill: {
+    repoName: "chittyformfill",
+    icon: "file",
+    color: "#fbbc04",
+    category: "automation",
+    capabilities: ["PDF form engine", "Form extraction", "AI form filling", "Claude/OpenAI"],
+  },
+  chittyforge: {
+    repoName: "chittyforge",
+    icon: "zap",
+    color: "#06b6d4",
+    category: "utility",
+    capabilities: ["Development tools", "Deployment", "ChittyApps ecosystem"],
+  },
+  "chittycloude-mcp": {
+    repoName: "chittycloude-mcp",
+    icon: "bot",
+    color: "#8b5cf6",
+    category: "ai",
+    capabilities: ["Cloud deployment", "Cloudflare", "Vercel", "MCP extension"],
+  },
+  chittychat: {
+    repoName: "chittychat",
+    icon: "message",
+    color: "#4285f4",
+    category: "communication",
+    capabilities: ["Chat platform", "Real-time messaging"],
+  },
+  chittycharge: {
+    repoName: "chittycharge",
+    icon: "zap",
+    color: "#f97316",
+    category: "data",
+    capabilities: ["Authorization holds", "ChittyPay", "Payment processing"],
+  },
+  ch1tty: {
+    repoName: "ch1tty",
+    icon: "bot",
+    color: "#ec4899",
+    category: "ai",
+    capabilities: ["AI assistant", "Core agent"],
+  },
+  chittyproof: {
+    repoName: "chittyproof",
+    icon: "shield",
+    color: "#34a853",
+    category: "verification",
+    capabilities: ["Proof generation", "Evidence verification", "Chain of proof"],
+  },
+  chico: {
+    repoName: "chico",
+    icon: "bot",
+    color: "#06b6d4",
+    category: "ai",
+    capabilities: ["AI companion", "Project assistant"],
+  },
+  "chittyagent-studio": {
+    repoName: "chittyagent-studio",
+    icon: "bot",
+    color: "#4285f4",
+    category: "ai",
+    capabilities: ["Agent builder", "No-code agents", "Workflow automation"],
+  },
 };
 
-const GITHUB_API = "https://api.github.com/orgs/chittyos/repos?per_page=100&sort=updated";
+const GITHUB_ORGS = ["chittyos", "chittyfoundation", "chittyapps", "furnished-condos"];
+
+const SKIP_REPOS = new Set([".github", "shared", "docs", "chittyos-workspace", "ecosystem", "chittychat-sessions", "chittyxl"]);
 
 function formatRepoName(name: string): string {
   return name
@@ -316,49 +458,70 @@ function formatRepoName(name: string): string {
     .join("");
 }
 
+async function fetchOrgRepos(org: string): Promise<any[]> {
+  const headers: Record<string, string> = { "User-Agent": "ChittyAgent-Studio" };
+  const token = process.env.GITHUB_TOKEN;
+  if (token) {
+    headers["Authorization"] = `token ${token}`;
+  }
+
+  const url = `https://api.github.com/orgs/${org}/repos?per_page=100&sort=updated`;
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    console.warn(`GitHub API returned ${response.status} for ${org}`);
+    return [];
+  }
+
+  const repos: any[] = await response.json();
+  return repos;
+}
+
 export async function syncGithubRepos(): Promise<void> {
   try {
-    console.log("Syncing repos from github.com/chittyos...");
-    const response = await fetch(GITHUB_API, {
-      headers: { "User-Agent": "ChittyAgent-Studio" },
-    });
+    console.log(`Syncing repos from ${GITHUB_ORGS.length} GitHub orgs...`);
 
-    if (!response.ok) {
-      console.error(`GitHub API returned ${response.status}`);
-      return;
+    let allRepos: { repo: any; org: string }[] = [];
+
+    for (const org of GITHUB_ORGS) {
+      const repos = await fetchOrgRepos(org);
+      console.log(`  ${org}: ${repos.length} repos`);
+      for (const repo of repos) {
+        allRepos.push({ repo, org });
+      }
     }
 
-    const repos: any[] = await response.json();
-    console.log(`Fetched ${repos.length} repos from GitHub`);
+    console.log(`Fetched ${allRepos.length} total repos from GitHub`);
 
     await db.delete(githubRepos);
 
-    for (const repo of repos) {
+    for (const { repo, org } of allRepos) {
       await db.insert(githubRepos).values({
         name: repo.name,
         fullName: repo.full_name,
         description: repo.description || null,
         language: repo.language || null,
         htmlUrl: repo.html_url,
+        org,
         stars: repo.stargazers_count || 0,
         forks: repo.forks_count || 0,
         updatedAt: repo.updated_at ? new Date(repo.updated_at) : null,
       });
     }
 
-    console.log(`Synced ${repos.length} repos to database`);
+    console.log(`Synced ${allRepos.length} repos to database`);
 
     const existingSkills = await db.select().from(skills);
     const existingRepoNames = new Set(existingSkills.map((s) => s.repoName));
 
     let newSkillCount = 0;
-    for (const repo of repos) {
-      if (repo.name === ".github" || repo.name === "shared" || repo.name === "docs" || repo.name === "chittyos-workspace") continue;
+    for (const { repo, org } of allRepos) {
+      if (SKIP_REPOS.has(repo.name)) continue;
       if (existingRepoNames.has(repo.name)) continue;
 
       const mapping = skillMappings[repo.name];
       const skillName = formatRepoName(repo.name);
-      const description = repo.description || `${skillName} service for ChittyOS ecosystem`;
+      const description = repo.description || `${skillName} - ${org} ecosystem service`;
 
       await db.insert(skills).values({
         name: skillName,
