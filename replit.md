@@ -1,6 +1,6 @@
-# Workspace Studio
+# ChittyAgent Studio
 
-A clone of Google Workspace Studio - a no-code AI agent builder platform where users can create, manage, and run AI-powered workflow agents.
+A no-code AI agent builder platform (inspired by Google Workspace Studio) where users can create, manage, and run AI-powered workflow agents.
 
 ## Architecture
 

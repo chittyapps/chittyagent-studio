@@ -26,7 +26,7 @@ export default function Home() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">
           <Sparkles className="w-5 h-5 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">Workspace Studio</h1>
+          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">ChittyAgent Studio</h1>
         </div>
         <p className="text-sm text-muted-foreground ml-8">
           Build AI agents to automate your everyday work

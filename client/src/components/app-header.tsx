@@ -21,7 +21,7 @@ export function AppHeader() {
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-sm hidden sm:inline">Workspace Studio</span>
+          <span className="font-semibold text-sm hidden sm:inline">ChittyAgent Studio</span>
         </button>
 
         <div className="relative max-w-md flex-1 hidden sm:block">
