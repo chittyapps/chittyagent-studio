@@ -1,9 +1,10 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import * as schema from "@shared/schema";
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+export function createDb(databaseUrl: string) {
+  const sql = neon(databaseUrl);
+  return drizzle(sql, { schema });
+}
 
-export const db = drizzle(pool, { schema });
+export type AppDb = ReturnType<typeof createDb>;

@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { type AppDb } from "./db";
 import { agents, skills, githubRepos } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
@@ -460,7 +460,7 @@ function formatRepoName(name: string): string {
 
 async function fetchOrgRepos(org: string): Promise<any[]> {
   const headers: Record<string, string> = { "User-Agent": "ChittyAgent-Studio" };
-  const token = process.env.GITHUB_TOKEN;
+  const token = typeof process !== "undefined" ? process.env?.GITHUB_TOKEN : undefined;
   if (token) {
     headers["Authorization"] = `token ${token}`;
   }
@@ -477,7 +477,7 @@ async function fetchOrgRepos(org: string): Promise<any[]> {
   return repos;
 }
 
-export async function syncGithubRepos(): Promise<void> {
+export async function syncGithubRepos(db: AppDb): Promise<void> {
   try {
     console.log(`Syncing repos from ${GITHUB_ORGS.length} GitHub orgs...`);
 
@@ -547,7 +547,7 @@ export async function syncGithubRepos(): Promise<void> {
   }
 }
 
-export async function seedDatabase() {
+export async function seedDatabase(db: AppDb) {
   try {
     const existingTemplates = await db.select().from(agents).where(eq(agents.isTemplate, true));
     if (existingTemplates.length === 0) {
@@ -562,7 +562,7 @@ export async function seedDatabase() {
       console.log(`Seeded ${templateData.length} templates`);
     }
 
-    await syncGithubRepos();
+    await syncGithubRepos(db);
   } catch (error) {
     console.error("Error seeding database:", error);
   }

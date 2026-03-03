@@ -1,68 +1,77 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { syncGithubRepos } from "./seed";
+import { Hono } from "hono";
+import { createDb } from "./db";
+import { DatabaseStorage } from "./storage";
 import { createAgentSchema, updateAgentSchema } from "@shared/schema";
 
-function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
-  return async (req: any, res: any) => {
-    try {
-      await handler(req, res);
-    } catch (err: any) {
-      res.status(500).json({ message: err.message });
-    }
-  };
-}
+type Bindings = { DATABASE_URL: string };
 
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
+export function registerRoutes(app: Hono<{ Bindings: Bindings }>) {
+  // --- Agents ---
 
-  app.get("/api/agents", asyncRoute(async (_req, res) => {
-    const agents = await storage.getAgents();
-    res.json(agents);
-  }));
+  app.get("/api/agents", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const agents = await store.getAgents();
+    return c.json(agents);
+  });
 
-  app.get("/api/agents/:id", asyncRoute(async (req, res) => {
-    const agent = await storage.getAgent(req.params.id);
-    if (!agent) return res.status(404).json({ message: "Agent not found" });
-    res.json(agent);
-  }));
+  app.get("/api/agents/:id", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const agent = await store.getAgent(c.req.param("id"));
+    if (!agent) return c.json({ error: "Agent not found" }, 404);
+    return c.json(agent);
+  });
 
-  app.post("/api/agents", asyncRoute(async (req, res) => {
-    const parsed = createAgentSchema.safeParse(req.body);
+  app.post("/api/agents", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const body = await c.req.json();
+    const parsed = createAgentSchema.safeParse(body);
     if (!parsed.success) {
-      return res.status(400).json({ message: parsed.error.issues.map(i => i.message).join(", ") });
+      return c.json(
+        { error: parsed.error.issues.map((i) => i.message).join(", ") },
+        400
+      );
     }
-    const agent = await storage.createAgent({
+    const agent = await store.createAgent({
       ...parsed.data,
       isTemplate: false,
     });
-    res.status(201).json(agent);
-  }));
+    return c.json(agent, 201);
+  });
 
-  app.patch("/api/agents/:id", asyncRoute(async (req, res) => {
-    const parsed = updateAgentSchema.safeParse(req.body);
+  app.patch("/api/agents/:id", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const body = await c.req.json();
+    const parsed = updateAgentSchema.safeParse(body);
     if (!parsed.success) {
-      return res.status(400).json({ message: parsed.error.issues.map(i => i.message).join(", ") });
+      return c.json(
+        { error: parsed.error.issues.map((i) => i.message).join(", ") },
+        400
+      );
     }
-    const agent = await storage.updateAgent(req.params.id, parsed.data);
-    if (!agent) return res.status(404).json({ message: "Agent not found" });
-    res.json(agent);
-  }));
+    const agent = await store.updateAgent(c.req.param("id"), parsed.data);
+    if (!agent) return c.json({ error: "Agent not found" }, 404);
+    return c.json(agent);
+  });
 
-  app.delete("/api/agents/:id", asyncRoute(async (req, res) => {
-    const deleted = await storage.deleteAgent(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Agent not found" });
-    res.json({ success: true });
-  }));
+  app.delete("/api/agents/:id", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const deleted = await store.deleteAgent(c.req.param("id"));
+    if (!deleted) return c.json({ error: "Agent not found" }, 404);
+    return c.json({ success: true });
+  });
 
-  app.post("/api/agents/:id/run", asyncRoute(async (req, res) => {
-    const agent = await storage.getAgent(req.params.id);
-    if (!agent) return res.status(404).json({ message: "Agent not found" });
+  app.post("/api/agents/:id/run", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const agent = await store.getAgent(c.req.param("id"));
+    if (!agent) return c.json({ error: "Agent not found" }, 404);
 
-    const run = await storage.createAgentRun({
+    const run = await store.createAgentRun({
       agentId: agent.id,
       status: "running",
       triggerInfo: "Manual trigger",
@@ -70,45 +79,51 @@ export async function registerRoutes(
       totalSteps: 3,
     });
 
-    await storage.incrementRunCount(agent.id);
+    await store.incrementRunCount(agent.id);
 
-    setTimeout(async () => {
-      try {
-        await storage.updateAgentRun(run.id, {
-          status: "completed",
-          result: `Successfully completed: ${agent.name} processed 3 steps.`,
-          stepsCompleted: 3,
-          completedAt: new Date(),
-        });
-      } catch (e) {
-        console.error("Failed to update run:", e);
-      }
-    }, 2000);
+    // In Workers we cannot use setTimeout for background work.
+    // Mark the run as completed synchronously for now.
+    await store.updateAgentRun(run.id, {
+      status: "completed",
+      result: `Successfully completed: ${agent.name} processed 3 steps.`,
+      stepsCompleted: 3,
+      completedAt: new Date(),
+    });
 
-    res.json(run);
-  }));
+    return c.json(run);
+  });
 
-  app.get("/api/agents/:id/runs", asyncRoute(async (req, res) => {
-    const runs = await storage.getAgentRuns(req.params.id);
-    res.json(runs);
-  }));
+  app.get("/api/agents/:id/runs", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const runs = await store.getAgentRuns(c.req.param("id"));
+    return c.json(runs);
+  });
 
-  app.get("/api/templates", asyncRoute(async (_req, res) => {
-    const templates = await storage.getTemplates();
-    res.json(templates);
-  }));
+  // --- Templates ---
 
-  app.get("/api/templates/:id", asyncRoute(async (req, res) => {
-    const template = await storage.getTemplate(req.params.id);
-    if (!template) return res.status(404).json({ message: "Template not found" });
-    res.json(template);
-  }));
+  app.get("/api/templates", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const templates = await store.getTemplates();
+    return c.json(templates);
+  });
 
-  app.post("/api/templates/:id/use", asyncRoute(async (req, res) => {
-    const template = await storage.getTemplate(req.params.id);
-    if (!template) return res.status(404).json({ message: "Template not found" });
+  app.get("/api/templates/:id", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const template = await store.getTemplate(c.req.param("id"));
+    if (!template) return c.json({ error: "Template not found" }, 404);
+    return c.json(template);
+  });
 
-    const agent = await storage.createAgent({
+  app.post("/api/templates/:id/use", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const template = await store.getTemplate(c.req.param("id"));
+    if (!template) return c.json({ error: "Template not found" }, 404);
+
+    const agent = await store.createAgent({
       name: template.name,
       description: template.description,
       prompt: template.prompt,
@@ -116,43 +131,47 @@ export async function registerRoutes(
       color: template.color,
       status: "draft",
       triggerType: template.triggerType,
-      triggerConfig: template.triggerConfig as Record<string, unknown> || {},
-      actions: template.actions as any[] || [],
+      triggerConfig: (template.triggerConfig as Record<string, unknown>) || {},
+      actions: (template.actions as any[]) || [],
       category: template.category,
       skillIds: template.skillIds || [],
       isTemplate: false,
     });
-    res.status(201).json(agent);
-  }));
+    return c.json(agent, 201);
+  });
 
-  app.get("/api/skills", asyncRoute(async (_req, res) => {
-    const allSkills = await storage.getSkills();
-    res.json(allSkills);
-  }));
+  // --- Skills ---
 
-  app.get("/api/skills/:id", asyncRoute(async (req, res) => {
-    const skill = await storage.getSkill(req.params.id);
-    if (!skill) return res.status(404).json({ message: "Skill not found" });
-    res.json(skill);
-  }));
+  app.get("/api/skills", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const allSkills = await store.getSkills();
+    return c.json(allSkills);
+  });
 
-  app.post("/api/skills/:id/install", asyncRoute(async (req, res) => {
-    const skill = await storage.getSkill(req.params.id);
-    if (!skill) return res.status(404).json({ message: "Skill not found" });
-    await storage.incrementSkillInstall(req.params.id);
-    res.json({ success: true });
-  }));
+  app.get("/api/skills/:id", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const skill = await store.getSkill(c.req.param("id"));
+    if (!skill) return c.json({ error: "Skill not found" }, 404);
+    return c.json(skill);
+  });
 
-  app.get("/api/github/repos", asyncRoute(async (_req, res) => {
-    const repos = await storage.getGithubRepos();
-    res.json(repos);
-  }));
+  app.post("/api/skills/:id/install", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const skill = await store.getSkill(c.req.param("id"));
+    if (!skill) return c.json({ error: "Skill not found" }, 404);
+    await store.incrementSkillInstall(c.req.param("id"));
+    return c.json({ success: true });
+  });
 
-  app.post("/api/github/sync", asyncRoute(async (_req, res) => {
-    await syncGithubRepos();
-    const repos = await storage.getGithubRepos();
-    res.json({ success: true, count: repos.length });
-  }));
+  // --- GitHub Repos ---
 
-  return httpServer;
+  app.get("/api/github/repos", async (c) => {
+    const db = createDb(c.env.DATABASE_URL);
+    const store = new DatabaseStorage(db);
+    const repos = await store.getGithubRepos();
+    return c.json(repos);
+  });
 }

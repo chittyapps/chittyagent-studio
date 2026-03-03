@@ -6,7 +6,7 @@ import {
   type GithubRepo, type InsertGithubRepo,
   users, agents, agentRuns, skills, githubRepos,
 } from "@shared/schema";
-import { db } from "./db";
+import { type AppDb } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
@@ -39,37 +39,39 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  constructor(private db: AppDb) {}
+
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await this.db.select().from(users).where(eq(users.username, username));
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+    const [user] = await this.db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getAgents(): Promise<Agent[]> {
-    return db.select().from(agents).where(eq(agents.isTemplate, false)).orderBy(desc(agents.updatedAt));
+    return this.db.select().from(agents).where(eq(agents.isTemplate, false)).orderBy(desc(agents.updatedAt));
   }
 
   async getAgent(id: string): Promise<Agent | undefined> {
-    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    const [agent] = await this.db.select().from(agents).where(eq(agents.id, id));
     return agent;
   }
 
   async createAgent(data: InsertAgent): Promise<Agent> {
-    const [agent] = await db.insert(agents).values(data as any).returning();
+    const [agent] = await this.db.insert(agents).values(data as any).returning();
     return agent;
   }
 
   async updateAgent(id: string, data: Partial<InsertAgent>): Promise<Agent | undefined> {
-    const [agent] = await db
+    const [agent] = await this.db
       .update(agents)
       .set({ ...data, updatedAt: new Date() } as any)
       .where(eq(agents.id, id))
@@ -78,16 +80,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteAgent(id: string): Promise<boolean> {
-    const result = await db.delete(agents).where(eq(agents.id, id)).returning();
+    const result = await this.db.delete(agents).where(eq(agents.id, id)).returning();
     return result.length > 0;
   }
 
   async getTemplates(): Promise<Agent[]> {
-    return db.select().from(agents).where(eq(agents.isTemplate, true)).orderBy(agents.category);
+    return this.db.select().from(agents).where(eq(agents.isTemplate, true)).orderBy(agents.category);
   }
 
   async getTemplate(id: string): Promise<Agent | undefined> {
-    const [template] = await db
+    const [template] = await this.db
       .select()
       .from(agents)
       .where(and(eq(agents.id, id), eq(agents.isTemplate, true)));
@@ -95,7 +97,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAgentRuns(agentId: string): Promise<AgentRun[]> {
-    return db
+    return this.db
       .select()
       .from(agentRuns)
       .where(eq(agentRuns.agentId, agentId))
@@ -104,17 +106,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgentRun(data: InsertAgentRun): Promise<AgentRun> {
-    const [run] = await db.insert(agentRuns).values(data).returning();
+    const [run] = await this.db.insert(agentRuns).values(data).returning();
     return run;
   }
 
   async updateAgentRun(id: string, data: Partial<AgentRun>): Promise<AgentRun | undefined> {
-    const [run] = await db.update(agentRuns).set(data).where(eq(agentRuns.id, id)).returning();
+    const [run] = await this.db.update(agentRuns).set(data).where(eq(agentRuns.id, id)).returning();
     return run;
   }
 
   async incrementRunCount(agentId: string): Promise<void> {
-    await db
+    await this.db
       .update(agents)
       .set({
         runsCount: sql`${agents.runsCount} + 1`,
@@ -125,38 +127,36 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSkills(): Promise<Skill[]> {
-    return db.select().from(skills).orderBy(desc(skills.installCount));
+    return this.db.select().from(skills).orderBy(desc(skills.installCount));
   }
 
   async getSkill(id: string): Promise<Skill | undefined> {
-    const [skill] = await db.select().from(skills).where(eq(skills.id, id));
+    const [skill] = await this.db.select().from(skills).where(eq(skills.id, id));
     return skill;
   }
 
   async createSkill(data: InsertSkill): Promise<Skill> {
-    const [skill] = await db.insert(skills).values(data).returning();
+    const [skill] = await this.db.insert(skills).values(data).returning();
     return skill;
   }
 
   async incrementSkillInstall(id: string): Promise<void> {
-    await db
+    await this.db
       .update(skills)
       .set({ installCount: sql`${skills.installCount} + 1` })
       .where(eq(skills.id, id));
   }
 
   async getGithubRepos(): Promise<GithubRepo[]> {
-    return db.select().from(githubRepos).orderBy(githubRepos.name);
+    return this.db.select().from(githubRepos).orderBy(githubRepos.name);
   }
 
   async createGithubRepo(data: InsertGithubRepo): Promise<GithubRepo> {
-    const [repo] = await db.insert(githubRepos).values(data).returning();
+    const [repo] = await this.db.insert(githubRepos).values(data).returning();
     return repo;
   }
 
   async clearGithubRepos(): Promise<void> {
-    await db.delete(githubRepos);
+    await this.db.delete(githubRepos);
   }
 }
-
-export const storage = new DatabaseStorage();
