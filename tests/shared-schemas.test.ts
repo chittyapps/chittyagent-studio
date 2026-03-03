@@ -105,6 +105,34 @@ describe("Shared Validation Schemas", () => {
         expect(result.data.skillIds).toEqual(["skill-1", "skill-2"]);
       }
     });
+
+    it("accepts valid complianceConfig", () => {
+      const result = createAgentSchema.safeParse({
+        name: "Compliant Agent",
+        description: "Has compliance config",
+        complianceConfig: {
+          level: "recommended",
+          enabledRules: ["has-trigger", "has-end-node"],
+          customRules: [],
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("applies default complianceConfig when omitted", () => {
+      const result = createAgentSchema.safeParse({
+        name: "Default Agent",
+        description: "No compliance config",
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.complianceConfig).toEqual({
+          level: "recommended",
+          enabledRules: [],
+          customRules: [],
+        });
+      }
+    });
   });
 
   describe("updateAgentSchema", () => {
@@ -157,6 +185,7 @@ describe("Shared Validation Schemas", () => {
         actions: [],
         category: "general",
         skillIds: [],
+        complianceConfig: { level: "recommended", enabledRules: [], customRules: [] },
       };
 
       // Full data should pass both

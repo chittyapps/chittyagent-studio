@@ -31,6 +31,11 @@ export const agents = pgTable("agents", {
   category: text("category").notNull().default("general"),
   isTemplate: boolean("is_template").notNull().default(false),
   skillIds: text("skill_ids").array().default([]),
+  complianceConfig: jsonb("compliance_config").$type<ComplianceConfig>().default({
+    level: "recommended",
+    enabledRules: [],
+    customRules: [],
+  }),
   runsCount: integer("runs_count").notNull().default(0),
   lastRunAt: timestamp("last_run_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -42,6 +47,12 @@ export interface AgentAction {
   type: string;
   label: string;
   config: Record<string, unknown>;
+}
+
+export interface ComplianceConfig {
+  level: "permissive" | "recommended" | "strict";
+  enabledRules: string[];
+  customRules: Array<{ id: string; name: string; expression: string }>;
 }
 
 export const insertAgentSchema = createInsertSchema(agents).omit({
@@ -62,6 +73,16 @@ const agentActionSchema = z.object({
   config: z.record(z.unknown()),
 });
 
+const complianceConfigSchema = z.object({
+  level: z.enum(["permissive", "recommended", "strict"]).default("recommended"),
+  enabledRules: z.array(z.string()).default([]),
+  customRules: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    expression: z.string(),
+  })).default([]),
+}).default({ level: "recommended", enabledRules: [], customRules: [] });
+
 export const createAgentSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().min(1, "Description is required").max(500),
@@ -74,6 +95,7 @@ export const createAgentSchema = z.object({
   actions: z.array(agentActionSchema).default([]),
   category: z.string().default("general"),
   skillIds: z.array(z.string()).default([]),
+  complianceConfig: complianceConfigSchema,
 });
 
 export const updateAgentSchema = createAgentSchema.partial();
