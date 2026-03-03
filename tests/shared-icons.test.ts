@@ -25,6 +25,8 @@ describe("Shared Icon Map", () => {
     const validKeys = new Set([
       "bot", "mail", "file", "calendar", "message",
       "search", "zap", "shield", "chart", "users", "puzzle",
+      "git-branch", "repeat", "clock", "circle-stop", "sparkles",
+      "globe", "code", "shuffle", "layers", "bell",
     ]);
     for (const key of Object.keys(iconMap)) {
       expect(validKeys.has(key)).toBe(true);
