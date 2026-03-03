@@ -7,6 +7,9 @@ import {
   TEMPLATE_CATEGORIES,
   SKILL_CATEGORIES,
   ORG_LABELS,
+  WORKFLOW_NODE_TYPES,
+  COMPLIANCE_RULES,
+  COMPLIANCE_LEVELS,
 } from "../client/src/lib/constants";
 
 describe("Shared Constants", () => {
@@ -98,5 +101,51 @@ describe("Shared Constants", () => {
       expect(ORG_LABELS).toHaveProperty("chittyapps");
       expect(ORG_LABELS).toHaveProperty("furnished-condos");
     });
+  });
+});
+
+describe("Workflow constants", () => {
+  it("defines all 13 node types", () => {
+    expect(WORKFLOW_NODE_TYPES).toHaveLength(13);
+  });
+
+  it("each node type has required fields", () => {
+    for (const nodeType of WORKFLOW_NODE_TYPES) {
+      expect(nodeType).toHaveProperty("type");
+      expect(nodeType).toHaveProperty("label");
+      expect(nodeType).toHaveProperty("category");
+      expect(nodeType).toHaveProperty("icon");
+      expect(nodeType).toHaveProperty("color");
+    }
+  });
+
+  it("has trigger node type", () => {
+    expect(WORKFLOW_NODE_TYPES.find(n => n.type === "trigger")).toBeDefined();
+  });
+
+  it("has condition node type with multiple handles", () => {
+    const condition = WORKFLOW_NODE_TYPES.find(n => n.type === "condition");
+    expect(condition).toBeDefined();
+    expect(condition?.handles?.outputs).toContain("true");
+    expect(condition?.handles?.outputs).toContain("false");
+  });
+});
+
+describe("Compliance constants", () => {
+  it("defines baseline rules", () => {
+    expect(COMPLIANCE_RULES.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("each rule has required fields", () => {
+    for (const rule of COMPLIANCE_RULES) {
+      expect(rule).toHaveProperty("id");
+      expect(rule).toHaveProperty("name");
+      expect(rule).toHaveProperty("description");
+      expect(rule).toHaveProperty("level");
+    }
+  });
+
+  it("defines 3 compliance levels", () => {
+    expect(COMPLIANCE_LEVELS).toHaveLength(3);
   });
 });
