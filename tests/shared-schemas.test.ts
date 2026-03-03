@@ -30,7 +30,7 @@ describe("Shared Validation Schemas", () => {
         expect(result.data.triggerType).toBe("manual");
         expect(result.data.category).toBe("general");
         expect(result.data.prompt).toBe("");
-        expect(result.data.actions).toEqual([]);
+        expect(result.data.actions).toEqual({ nodes: [], edges: [] });
         expect(result.data.skillIds).toEqual([]);
         expect(result.data.triggerConfig).toEqual({});
       }
@@ -182,7 +182,7 @@ describe("Shared Validation Schemas", () => {
         status: "draft",
         triggerType: "manual",
         triggerConfig: {},
-        actions: [],
+        actions: { nodes: [], edges: [] },
         category: "general",
         skillIds: [],
         complianceConfig: { level: "recommended", enabledRules: [], customRules: [] },

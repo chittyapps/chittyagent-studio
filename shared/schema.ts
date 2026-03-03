@@ -26,7 +26,7 @@ export const agents = pgTable("agents", {
   status: text("status").notNull().default("draft"),
   triggerType: text("trigger_type").notNull().default("manual"),
   triggerConfig: jsonb("trigger_config").$type<Record<string, unknown>>().default({}),
-  actions: jsonb("actions").$type<AgentAction[]>().default([]),
+  actions: jsonb("actions").$type<WorkflowData | AgentAction[]>().default({ nodes: [], edges: [] }),
   prompt: text("prompt").notNull().default(""),
   category: text("category").notNull().default("general"),
   isTemplate: boolean("is_template").notNull().default(false),
@@ -47,6 +47,22 @@ export interface AgentAction {
   type: string;
   label: string;
   config: Record<string, unknown>;
+}
+
+export interface WorkflowData {
+  nodes: Array<{
+    id: string;
+    type: string;
+    position: { x: number; y: number };
+    data: Record<string, unknown>;
+  }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle?: string;
+    label?: string;
+  }>;
 }
 
 export interface ComplianceConfig {
@@ -92,7 +108,7 @@ export const createAgentSchema = z.object({
   status: z.string().default("draft"),
   triggerType: z.string().default("manual"),
   triggerConfig: z.record(z.unknown()).default({}),
-  actions: z.array(agentActionSchema).default([]),
+  actions: z.any().default({ nodes: [], edges: [] }),
   category: z.string().default("general"),
   skillIds: z.array(z.string()).default([]),
   complianceConfig: complianceConfigSchema,
