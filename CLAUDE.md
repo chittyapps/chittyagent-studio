@@ -49,6 +49,12 @@ All prefixed with `/api/`: agents CRUD (`/agents`), templates (`/templates`), sk
 
 `/` home, `/agents/new` and `/agents/:id/edit` (AgentBuilder), `/agents/:id` (AgentDetail), `/templates`, `/templates/:id`, `/skills`, `/repos`
 
+### Component Organization
+
+- Workflow-specific components (canvas, nodes) go in `client/src/components/workflow/`
+- Agent builder page is `client/src/pages/agent-builder.tsx` — uses React Hook Form + Zod with a single form instance shared across tabs
+- All UI constants (node types, compliance rules, categories, colors) are centralized in `client/src/lib/constants.ts` — never scatter in components
+
 ## Environment Variables
 
 - `DATABASE_URL` — PostgreSQL connection string (required)
@@ -58,11 +64,16 @@ All prefixed with `/api/`: agents CRUD (`/agents`), templates (`/templates`), sk
 
 Tests are in `tests/` using Vitest with `globals: true` (no imports needed for describe/it/expect). Environment is `node`. Test timeout is 15 seconds.
 
+- Tests cover both logic validation AND adoption/convention enforcement (e.g., verifying `useMutationWithToast` is used across all pages)
+- Implementation plans are stored in `docs/plans/` for multi-step features
+
 ## Gotchas
 
 - Drizzle schema uses snake_case DB columns mapped to camelCase TS properties (e.g., `trigger_type` → `triggerType`)
 - `server/seed.ts` auto-seeds templates, skills, and GitHub repos on first startup — don't duplicate seed data manually
 - React Query `staleTime: Infinity` means data never auto-refetches; invalidate queries manually after mutations
+- `actions`, `complianceConfig`, and `triggerConfig` are JSONB columns — use typed interfaces (`WorkflowData`, `ComplianceConfig`) from `shared/schema.ts`
+- `storage.updateAgent()` auto-sets `updatedAt` — don't pass it manually
 
 ## UI Conventions
 
