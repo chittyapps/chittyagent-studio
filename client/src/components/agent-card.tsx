@@ -2,30 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type Agent } from "@shared/schema";
 import { useLocation } from "wouter";
-import {
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users, Clock, Play
-} from "lucide-react";
+import { iconMap } from "@/lib/icons";
+import { STATUS_COLORS } from "@/lib/constants";
+import { Bot, Clock, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot,
-  mail: Mail,
-  file: FileText,
-  calendar: Calendar,
-  message: MessageSquare,
-  search: Search,
-  zap: Zap,
-  shield: Shield,
-  chart: BarChart3,
-  users: Users,
-};
-
-const statusColors: Record<string, string> = {
-  active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  draft: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  paused: "bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400",
-};
 
 export function AgentCard({ agent }: { agent: Agent }) {
   const [, navigate] = useLocation();
@@ -49,7 +29,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
             <h3 className="font-semibold text-sm truncate">{agent.name}</h3>
             <Badge
               variant="secondary"
-              className={`text-[10px] px-1.5 py-0 ${statusColors[agent.status] || ""}`}
+              className={`text-[10px] px-1.5 py-0 ${STATUS_COLORS[agent.status] || ""}`}
             >
               {agent.status}
             </Badge>

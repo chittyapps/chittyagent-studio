@@ -55,6 +55,29 @@ export const insertAgentSchema = createInsertSchema(agents).omit({
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type Agent = typeof agents.$inferSelect;
 
+const agentActionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  label: z.string(),
+  config: z.record(z.unknown()),
+});
+
+export const createAgentSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().min(1, "Description is required").max(500),
+  prompt: z.string().max(5000).default(""),
+  icon: z.string().default("bot"),
+  color: z.string().default("#4285f4"),
+  status: z.string().default("draft"),
+  triggerType: z.string().default("manual"),
+  triggerConfig: z.record(z.unknown()).default({}),
+  actions: z.array(agentActionSchema).default([]),
+  category: z.string().default("general"),
+  skillIds: z.array(z.string()).default([]),
+});
+
+export const updateAgentSchema = createAgentSchema.partial();
+
 export const agentRuns = pgTable("agent_runs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   agentId: varchar("agent_id").notNull(),

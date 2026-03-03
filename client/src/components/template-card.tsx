@@ -2,34 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type Agent } from "@shared/schema";
 import { useLocation } from "wouter";
-import {
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users, ArrowRight
-} from "lucide-react";
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot,
-  mail: Mail,
-  file: FileText,
-  calendar: Calendar,
-  message: MessageSquare,
-  search: Search,
-  zap: Zap,
-  shield: Shield,
-  chart: BarChart3,
-  users: Users,
-};
-
-const categoryLabels: Record<string, string> = {
-  email: "Email",
-  productivity: "Productivity",
-  communication: "Communication",
-  data: "Data & Analytics",
-  general: "General",
-  hr: "HR",
-  sales: "Sales",
-  support: "Support",
-};
+import { iconMap } from "@/lib/icons";
+import { CATEGORY_LABELS } from "@/lib/constants";
+import { Bot, ArrowRight } from "lucide-react";
 
 export function TemplateCard({ template }: { template: Agent }) {
   const [, navigate] = useLocation();
@@ -50,7 +25,7 @@ export function TemplateCard({ template }: { template: Agent }) {
             <IconComponent className="w-5 h-5" />
           </div>
           <Badge variant="secondary" className="text-[10px] shrink-0">
-            {categoryLabels[template.category] || template.category}
+            {CATEGORY_LABELS[template.category] || template.category}
           </Badge>
         </div>
         <div>

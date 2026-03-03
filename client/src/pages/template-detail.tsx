@@ -1,26 +1,19 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { type Agent } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { iconMap } from "@/lib/icons";
+import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import {
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users, ArrowLeft, Copy, Loader2
+  Bot, ArrowLeft, Copy, Loader2
 } from "lucide-react";
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot, mail: Mail, file: FileText, calendar: Calendar,
-  message: MessageSquare, search: Search, zap: Zap, shield: Shield,
-  chart: BarChart3, users: Users,
-};
 
 export default function TemplateDetail() {
   const [, params] = useRoute("/templates/:id");
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const templateId = params?.id;
 
   const { data: template, isLoading } = useQuery<Agent>({
@@ -28,19 +21,14 @@ export default function TemplateDetail() {
     enabled: !!templateId,
   });
 
-  const useTemplateMutation = useMutation({
+  const useTemplateMutation = useMutationWithToast<Agent>({
     mutationFn: async () => {
       const res = await apiRequest("POST", `/api/templates/${templateId}/use`);
       return res.json();
     },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
-      toast({ title: "Agent created from template" });
-      navigate(`/agents/${result.id}`);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
+    invalidateKeys: [["/api/agents"]],
+    successMessage: "Agent created from template",
+    onSuccess: (result) => navigate(`/agents/${result.id}`),
   });
 
   if (isLoading) {

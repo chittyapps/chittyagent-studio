@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChittyAgent Studio — Brutalist/Raw</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f0ede6;
+    --black: #0a0a0a;
+    --red: #ff3300;
+    --text: #0a0a0a;
+    --text-muted: #6b6b6b;
+    --border: 2px solid var(--black);
+  }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Nav */
+  .nav {
+    display: flex;
+    border-bottom: var(--border);
+  }
+
+  .nav-brand {
+    padding: 16px 24px;
+    border-right: var(--border);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  .nav-brand span { color: var(--red); }
+
+  .nav-links {
+    display: flex;
+    flex: 1;
+  }
+
+  .nav-link {
+    padding: 16px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    border-right: var(--border);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+  }
+
+  .nav-link:hover { background: var(--black); color: var(--bg); }
+  .nav-link.active { background: var(--black); color: var(--bg); }
+
+  .nav-create {
+    margin-left: auto;
+    padding: 16px 24px;
+    background: var(--red);
+    color: white;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+
+  .nav-create:hover { background: var(--black); }
+
+  /* Giant Title */
+  .page-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(60px, 10vw, 120px);
+    font-weight: 400;
+    line-height: 0.9;
+    padding: 32px 24px 0;
+    border-bottom: var(--border);
+    overflow: hidden;
+    animation: titleSlide 0.4s ease both;
+  }
+
+  @keyframes titleSlide {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .page-title em { font-style: italic; color: var(--red); }
+
+  .page-subtitle {
+    padding: 12px 24px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    border-bottom: var(--border);
+  }
+
+  /* Layout */
+  .content {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+
+  /* Side labels */
+  .side-nav {
+    border-right: var(--border);
+    padding-top: 1px;
+  }
+
+  .side-label {
+    padding: 16px 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 1px solid rgba(10,10,10,0.15);
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .side-label:hover { background: var(--black); color: var(--bg); }
+  .side-label.active { background: var(--black); color: var(--bg); }
+  .side-label .count { float: right; color: var(--text-muted); }
+  .side-label:hover .count { color: inherit; }
+  .side-label.active .count { color: var(--red); }
+
+  /* Main area */
+  .main-area { min-height: 80vh; }
+
+  /* Section */
+  .section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: var(--border);
+    background: var(--black);
+    color: var(--bg);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* Agent blocks */
+  .agent-list { border-bottom: 1px solid rgba(10,10,10,0.15); }
+
+  .agent-block {
+    display: grid;
+    grid-template-columns: 2fr 3fr 100px 100px;
+    align-items: baseline;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(10,10,10,0.15);
+    cursor: pointer;
+    transition: all 0.1s ease;
+    animation: rowFade 0.3s ease both;
+  }
+
+  .agent-block:nth-child(1) { animation-delay: 0.05s; }
+  .agent-block:nth-child(2) { animation-delay: 0.1s; }
+  .agent-block:nth-child(3) { animation-delay: 0.15s; }
+  .agent-block:nth-child(4) { animation-delay: 0.2s; }
+  .agent-block:nth-child(5) { animation-delay: 0.25s; }
+
+  @keyframes rowFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .agent-block:hover { background: var(--black); color: var(--bg); }
+
+  .agent-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.1;
+  }
+
+  .agent-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .agent-block:hover .agent-desc { color: rgba(240,237,230,0.6); }
+
+  .agent-status {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .agent-runs {
+    font-size: 12px;
+    text-align: right;
+  }
+
+  .status-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border: 1px solid;
+  }
+
+  .tag-active { border-color: var(--black); }
+  .agent-block:hover .tag-active { border-color: var(--bg); }
+  .tag-draft { border-color: var(--text-muted); color: var(--text-muted); }
+  .agent-block:hover .tag-draft { border-color: rgba(240,237,230,0.5); color: rgba(240,237,230,0.5); }
+  .tag-paused { border-color: var(--red); color: var(--red); }
+
+  /* Skills strip */
+  .skills-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .skill-block {
+    padding: 16px 20px;
+    border-right: 1px solid rgba(10,10,10,0.15);
+    border-bottom: 1px solid rgba(10,10,10,0.15);
+    cursor: pointer;
+    transition: all 0.1s;
+    animation: rowFade 0.3s ease both;
+  }
+
+  .skill-block:nth-child(1) { animation-delay: 0.05s; }
+  .skill-block:nth-child(2) { animation-delay: 0.08s; }
+  .skill-block:nth-child(3) { animation-delay: 0.11s; }
+  .skill-block:nth-child(4) { animation-delay: 0.14s; }
+  .skill-block:nth-child(5) { animation-delay: 0.17s; }
+
+  .skill-block:last-child { border-right: none; }
+  .skill-block:hover { background: var(--black); color: var(--bg); }
+
+  .skill-id {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .skill-block:hover .skill-id { color: var(--red); }
+
+  .skill-block-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 18px;
+  }
+
+  .skill-block-cat {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .skill-block:hover .skill-block-cat { color: rgba(240,237,230,0.5); }
+
+  /* Templates */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .template-block {
+    padding: 20px;
+    border-right: 1px solid rgba(10,10,10,0.15);
+    border-bottom: 1px solid rgba(10,10,10,0.15);
+    cursor: pointer;
+    transition: all 0.1s;
+    animation: rowFade 0.3s ease both;
+  }
+
+  .template-block:nth-child(4n) { border-right: none; }
+  .template-block:hover { background: var(--black); color: var(--bg); }
+
+  .tmpl-num {
+    font-size: 10px;
+    color: var(--red);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .tmpl-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+
+  .tmpl-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .template-block:hover .tmpl-desc { color: rgba(240,237,230,0.6); }
+
+  .tmpl-cat {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--red);
+    padding-bottom: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-brand">Chitty<span>Agent</span></div>
+  <div class="nav-links">
+    <a class="nav-link active">Dashboard</a>
+    <a class="nav-link">Templates</a>
+    <a class="nav-link">Skills</a>
+    <a class="nav-link">Repos</a>
+  </div>
+  <button class="nav-create">+ New Agent</button>
+</nav>
+
+<!-- Giant Title -->
+<div class="page-title">
+  Your <em>Agents</em>
+</div>
+<div class="page-subtitle">5 agents &middot; 3 active &middot; 247 runs this week</div>
+
+<!-- Content -->
+<div class="content">
+  <!-- Side Nav -->
+  <aside class="side-nav">
+    <div class="side-label active">All <span class="count">5</span></div>
+    <div class="side-label">Active <span class="count">3</span></div>
+    <div class="side-label">Draft <span class="count">1</span></div>
+    <div class="side-label">Paused <span class="count">1</span></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-area">
+    <!-- Agents -->
+    <div class="section-bar">
+      <span>Agents</span>
+      <span>5 Total</span>
+    </div>
+    <div class="agent-list">
+      <div class="agent-block">
+        <div class="agent-name">Email Triager</div>
+        <div class="agent-desc">Categorizes and routes incoming emails to the right team</div>
+        <div class="agent-status"><span class="status-tag tag-active">[ACTIVE]</span></div>
+        <div class="agent-runs">142 runs</div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-name">Report Generator</div>
+        <div class="agent-desc">Compiles weekly metrics from multiple data sources</div>
+        <div class="agent-status"><span class="status-tag tag-active">[ACTIVE]</span></div>
+        <div class="agent-runs">89 runs</div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-name">Slack Notifier</div>
+        <div class="agent-desc">Sends intelligent notifications based on project activity</div>
+        <div class="agent-status"><span class="status-tag tag-draft">[DRAFT]</span></div>
+        <div class="agent-runs">0 runs</div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-name">CI Monitor</div>
+        <div class="agent-desc">Watches CI pipelines and alerts on failures</div>
+        <div class="agent-status"><span class="status-tag tag-active">[ACTIVE]</span></div>
+        <div class="agent-runs">312 runs</div>
+      </div>
+      <div class="agent-block">
+        <div class="agent-name">Deploy Bot</div>
+        <div class="agent-desc">Orchestrates deployments across staging and production</div>
+        <div class="agent-status"><span class="status-tag tag-paused">[PAUSED]</span></div>
+        <div class="agent-runs">56 runs</div>
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="section-bar">
+      <span>Ecosystem Skills</span>
+      <span>14 Available</span>
+    </div>
+    <div class="skills-strip">
+      <div class="skill-block">
+        <div class="skill-id">SK-001</div>
+        <div class="skill-block-name">ChittyScore</div>
+        <div class="skill-block-cat">Analytics</div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-id">SK-002</div>
+        <div class="skill-block-name">ChittyVerify</div>
+        <div class="skill-block-cat">Verification</div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-id">SK-003</div>
+        <div class="skill-block-name">ChittyIntel</div>
+        <div class="skill-block-cat">Intelligence</div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-id">SK-004</div>
+        <div class="skill-block-name">ChittyBeacon</div>
+        <div class="skill-block-cat">Monitoring</div>
+      </div>
+      <div class="skill-block">
+        <div class="skill-id">SK-005</div>
+        <div class="skill-block-name">ChittyLedger</div>
+        <div class="skill-block-cat">Finance</div>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="section-bar">
+      <span>Templates</span>
+      <span>8 Available</span>
+    </div>
+    <div class="template-grid">
+      <div class="template-block">
+        <div class="tmpl-num">01</div>
+        <div class="tmpl-name">Email Workflow</div>
+        <div class="tmpl-desc">Automate email sorting, responding, and follow-ups</div>
+        <span class="tmpl-cat">Communication</span>
+      </div>
+      <div class="template-block">
+        <div class="tmpl-num">02</div>
+        <div class="tmpl-name">Data Processor</div>
+        <div class="tmpl-desc">Transform, validate, and route data between systems</div>
+        <span class="tmpl-cat">Data</span>
+      </div>
+      <div class="template-block">
+        <div class="tmpl-num">03</div>
+        <div class="tmpl-name">Support Bot</div>
+        <div class="tmpl-desc">Handle customer inquiries with intelligent responses</div>
+        <span class="tmpl-cat">Support</span>
+      </div>
+      <div class="template-block">
+        <div class="tmpl-num">04</div>
+        <div class="tmpl-name">Daily Standup</div>
+        <div class="tmpl-desc">Compile team updates and generate standup summaries</div>
+        <span class="tmpl-cat">Productivity</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

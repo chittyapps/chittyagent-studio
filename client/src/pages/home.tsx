@@ -4,20 +4,12 @@ import { AgentCard, AgentCardSkeleton } from "@/components/agent-card";
 import { TemplateCard, TemplateCardSkeleton } from "@/components/template-card";
 import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { iconMap } from "@/lib/icons";
 import {
   Sparkles, LayoutGrid, ArrowRight, Puzzle,
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot, mail: Mail, file: FileText, calendar: Calendar,
-  message: MessageSquare, search: Search, zap: Zap, shield: Shield,
-  chart: BarChart3, users: Users, puzzle: Puzzle,
-};
 
 export default function Home() {
   const [, navigate] = useLocation();

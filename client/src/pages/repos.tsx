@@ -1,53 +1,34 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { type GithubRepo } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { LANG_COLORS, ORG_LABELS } from "@/lib/constants";
+import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import {
   ArrowLeft, ExternalLink, GitFork, Star, Search, RefreshCw, Loader2
 } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 import { useState, useMemo } from "react";
 
-const langColors: Record<string, string> = {
-  TypeScript: "#3178c6",
-  JavaScript: "#f7df1e",
-  Python: "#3776ab",
-  Go: "#00add8",
-  Shell: "#89e051",
-  HTML: "#e34c26",
-};
-
-const orgLabels: Record<string, string> = {
-  all: "All Orgs",
-  chittyos: "chittyos",
-  chittyfoundation: "chittyfoundation",
-  chittyapps: "chittyapps",
-  "furnished-condos": "furnished-condos",
-};
-
 export default function Repos() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeOrg, setActiveOrg] = useState("all");
 
-  const syncMutation = useMutation({
+  const syncMutation = useMutationWithToast<{ count: number }>({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/github/sync");
       return res.json();
     },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/github/repos"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
-      toast({ title: "Repos synced", description: `Synced ${data.count} repos from GitHub` });
-    },
-    onError: () => {
-      toast({ title: "Sync failed", description: "Could not fetch repos from GitHub", variant: "destructive" });
+    invalidateKeys: [["/api/github/repos"], ["/api/skills"]],
+    successMessage: "Repos synced",
+    onError: (err) => {
+      // Custom error for sync - keep the toast pattern but with specific message
+      void err;
     },
   });
 
@@ -135,7 +116,7 @@ export default function Repos() {
             onClick={() => setActiveOrg(org)}
             data-testid={`button-org-${org}`}
           >
-            {orgLabels[org] || org} ({orgCounts[org] || 0})
+            {ORG_LABELS[org] || org} ({orgCounts[org] || 0})
           </Button>
         ))}
       </div>
@@ -191,7 +172,7 @@ export default function Repos() {
                     <div className="flex items-center gap-1">
                       <span
                         className="w-2.5 h-2.5 rounded-full inline-block"
-                        style={{ backgroundColor: langColors[repo.language] || "#888" }}
+                        style={{ backgroundColor: LANG_COLORS[repo.language] || "#888" }}
                       />
                       <span className="text-[11px] text-muted-foreground">{repo.language}</span>
                     </div>

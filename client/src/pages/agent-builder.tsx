@@ -1,13 +1,11 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { type Agent, insertAgentSchema } from "@shared/schema";
+import { type Agent, createAgentSchema } from "@shared/schema";
+import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -15,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Loader2, Sparkles,
   Bot, Mail, FileText, Calendar, MessageSquare, Search,
@@ -62,14 +59,15 @@ const categoryOptions = [
   { value: "support", label: "Support" },
 ];
 
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  description: z.string().min(1, "Description is required").max(500),
-  prompt: z.string().max(5000).default(""),
-  icon: z.string().default("bot"),
-  color: z.string().default("#4285f4"),
-  triggerType: z.string().default("manual"),
-  category: z.string().default("general"),
+const formSchema = createAgentSchema.pick({
+  name: true,
+  description: true,
+  prompt: true,
+  icon: true,
+  color: true,
+  triggerType: true,
+  category: true,
+}).extend({
   status: z.string().default("draft"),
 });
 
@@ -78,7 +76,6 @@ type FormValues = z.infer<typeof formSchema>;
 export default function AgentBuilder() {
   const [, navigate] = useLocation();
   const [, editParams] = useRoute("/agents/:id/edit");
-  const { toast } = useToast();
   const isEditing = !!editParams?.id;
   const agentId = editParams?.id;
 
@@ -113,7 +110,7 @@ export default function AgentBuilder() {
       : undefined,
   });
 
-  const saveMutation = useMutation({
+  const saveMutation = useMutationWithToast<Agent, FormValues>({
     mutationFn: async (data: FormValues) => {
       if (isEditing) {
         const res = await apiRequest("PATCH", `/api/agents/${agentId}`, data);
@@ -122,17 +119,11 @@ export default function AgentBuilder() {
       const res = await apiRequest("POST", "/api/agents", data);
       return res.json();
     },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
-      if (isEditing) {
-        queryClient.invalidateQueries({ queryKey: ["/api/agents", agentId] });
-      }
-      toast({ title: isEditing ? "Agent updated" : "Agent created" });
-      navigate(`/agents/${result.id}`);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
+    invalidateKeys: isEditing
+      ? [["/api/agents"], ["/api/agents", agentId]]
+      : [["/api/agents"]],
+    successMessage: isEditing ? "Agent updated" : "Agent created",
+    onSuccess: (result) => navigate(`/agents/${result.id}`),
   });
 
   const selectedIcon = iconOptions.find((o) => o.value === form.watch("icon"));

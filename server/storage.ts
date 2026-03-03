@@ -7,7 +7,7 @@ import {
   users, agents, agentRuns, skills, githubRepos,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -64,14 +64,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgent(data: InsertAgent): Promise<Agent> {
-    const [agent] = await db.insert(agents).values(data).returning();
+    const [agent] = await db.insert(agents).values(data as any).returning();
     return agent;
   }
 
   async updateAgent(id: string, data: Partial<InsertAgent>): Promise<Agent | undefined> {
     const [agent] = await db
       .update(agents)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...data, updatedAt: new Date() } as any)
       .where(eq(agents.id, id))
       .returning();
     return agent;
@@ -114,17 +114,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementRunCount(agentId: string): Promise<void> {
-    const agent = await this.getAgent(agentId);
-    if (agent) {
-      await db
-        .update(agents)
-        .set({
-          runsCount: agent.runsCount + 1,
-          lastRunAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(agents.id, agentId));
-    }
+    await db
+      .update(agents)
+      .set({
+        runsCount: sql`${agents.runsCount} + 1`,
+        lastRunAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(agents.id, agentId));
   }
 
   async getSkills(): Promise<Skill[]> {
@@ -142,13 +139,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementSkillInstall(id: string): Promise<void> {
-    const skill = await this.getSkill(id);
-    if (skill) {
-      await db
-        .update(skills)
-        .set({ installCount: skill.installCount + 1 })
-        .where(eq(skills.id, id));
-    }
+    await db
+      .update(skills)
+      .set({ installCount: sql`${skills.installCount} + 1` })
+      .where(eq(skills.id, id));
   }
 
   async getGithubRepos(): Promise<GithubRepo[]> {

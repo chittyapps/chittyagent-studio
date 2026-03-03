@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { type Agent } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -6,53 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TemplateCardSkeleton } from "@/components/template-card";
-import { useToast } from "@/hooks/use-toast";
+import { iconMap } from "@/lib/icons";
+import { TEMPLATE_CATEGORIES } from "@/lib/constants";
+import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import {
-  ArrowLeft, Copy, LayoutGrid,
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users, Loader2
+  ArrowLeft, Copy, LayoutGrid, Bot, Loader2
 } from "lucide-react";
 import { useState } from "react";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot, mail: Mail, file: FileText, calendar: Calendar,
-  message: MessageSquare, search: Search, zap: Zap, shield: Shield,
-  chart: BarChart3, users: Users,
-};
-
-const categories = [
-  { value: "all", label: "All" },
-  { value: "email", label: "Email" },
-  { value: "productivity", label: "Productivity" },
-  { value: "communication", label: "Communication" },
-  { value: "data", label: "Data" },
-  { value: "hr", label: "HR" },
-  { value: "sales", label: "Sales" },
-  { value: "support", label: "Support" },
-];
-
 export default function Templates() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState("all");
 
   const { data: templates, isLoading } = useQuery<Agent[]>({
     queryKey: ["/api/templates"],
   });
 
-  const useTemplateMutation = useMutation({
+  const useTemplateMutation = useMutationWithToast<Agent, string>({
     mutationFn: async (templateId: string) => {
       const res = await apiRequest("POST", `/api/templates/${templateId}/use`);
       return res.json();
     },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/agents"] });
-      toast({ title: "Agent created from template" });
-      navigate(`/agents/${result.id}`);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
+    invalidateKeys: [["/api/agents"]],
+    successMessage: "Agent created from template",
+    onSuccess: (result) => navigate(`/agents/${result.id}`),
   });
 
   const filtered = templates?.filter(
@@ -80,7 +57,7 @@ export default function Templates() {
       </p>
 
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        {categories.map((cat) => (
+        {TEMPLATE_CATEGORIES.map((cat) => (
           <Button
             key={cat.value}
             variant={activeCategory === cat.value ? "default" : "secondary"}

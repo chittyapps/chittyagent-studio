@@ -1,64 +1,33 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { type Skill } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { iconMap } from "@/lib/icons";
+import { LANG_COLORS, SKILL_CATEGORIES } from "@/lib/constants";
+import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import {
   ArrowLeft, Download, ExternalLink, Puzzle,
-  Bot, Mail, FileText, Calendar, MessageSquare, Search,
-  Zap, Shield, BarChart3, Users, Loader2, Github
+  Loader2, Github
 } from "lucide-react";
 import { useState } from "react";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  bot: Bot, mail: Mail, file: FileText, calendar: Calendar,
-  message: MessageSquare, search: Search, zap: Zap, shield: Shield,
-  chart: BarChart3, users: Users, puzzle: Puzzle,
-};
-
-const categories = [
-  { value: "all", label: "All" },
-  { value: "trust", label: "Trust" },
-  { value: "verification", label: "Verification" },
-  { value: "intelligence", label: "Intelligence" },
-  { value: "monitoring", label: "Monitoring" },
-  { value: "data", label: "Data" },
-  { value: "legal", label: "Legal" },
-  { value: "automation", label: "Automation" },
-  { value: "ai", label: "AI" },
-  { value: "communication", label: "Communication" },
-  { value: "utility", label: "Utility" },
-];
-
-const langColors: Record<string, string> = {
-  TypeScript: "#3178c6",
-  JavaScript: "#f7df1e",
-  Python: "#3776ab",
-  Go: "#00add8",
-  Shell: "#89e051",
-  HTML: "#e34c26",
-};
-
 export default function Skills() {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [activeCategory, setActiveCategory] = useState("all");
 
   const { data: allSkills, isLoading } = useQuery<Skill[]>({
     queryKey: ["/api/skills"],
   });
 
-  const installMutation = useMutation({
+  const installMutation = useMutationWithToast<void, string>({
     mutationFn: async (skillId: string) => {
       await apiRequest("POST", `/api/skills/${skillId}/install`);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
-      toast({ title: "Skill installed", description: "This skill is now available for your agents." });
-    },
+    invalidateKeys: [["/api/skills"]],
+    successMessage: { title: "Skill installed", description: "This skill is now available for your agents." },
   });
 
   const filtered = allSkills?.filter(
@@ -87,7 +56,7 @@ export default function Skills() {
       </p>
 
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        {categories.map((cat) => (
+        {SKILL_CATEGORIES.map((cat) => (
           <Button
             key={cat.value}
             variant={activeCategory === cat.value ? "default" : "secondary"}
@@ -140,7 +109,7 @@ export default function Skills() {
                         <div className="flex items-center gap-1 mt-0.5">
                           <span
                             className="w-2 h-2 rounded-full inline-block"
-                            style={{ backgroundColor: langColors[skill.language] || "#888" }}
+                            style={{ backgroundColor: LANG_COLORS[skill.language] || "#888" }}
                           />
                           <span className="text-[10px] text-muted-foreground">{skill.language}</span>
                         </div>
