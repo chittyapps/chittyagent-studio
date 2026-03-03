@@ -33,6 +33,11 @@ export const agents = pgTable("agents", {
   skillIds: text("skill_ids").array().default([]),
   runsCount: integer("runs_count").notNull().default(0),
   lastRunAt: timestamp("last_run_at"),
+  published: boolean("published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  version: text("version").notNull().default("1.0.0"),
+  tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+  authorId: varchar("author_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -113,6 +118,11 @@ export const skills = pgTable("skills", {
   capabilities: text("capabilities").array().default([]),
   status: text("status").notNull().default("available"),
   installCount: integer("install_count").notNull().default(0),
+  published: boolean("published").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  version: text("version").notNull().default("1.0.0"),
+  tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+  authorId: varchar("author_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -146,3 +156,102 @@ export const insertGithubRepoSchema = createInsertSchema(githubRepos).omit({
 
 export type InsertGithubRepo = z.infer<typeof insertGithubRepoSchema>;
 export type GithubRepo = typeof githubRepos.$inferSelect;
+
+// --- ChittyMarket Schema ---
+// @canonical-uri chittycanon://core/services/chittymarket/schema
+// @canon: chittycanon://gov/governance#core-types
+
+export const listings = pgTable("listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  agentId: varchar("agent_id").references(() => agents.id, { onDelete: "set null" }),
+  skillId: varchar("skill_id").references(() => skills.id, { onDelete: "set null" }),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  authorId: varchar("author_id").references(() => users.id, { onDelete: "set null" }),
+  version: text("version").notNull().default("1.0.0"),
+  tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+  category: text("category").notNull().default("general"),
+  icon: text("icon").notNull().default("package"),
+  color: text("color").notNull().default("#4285f4"),
+  published: boolean("published").notNull().default(false),
+  featured: boolean("featured").notNull().default(false),
+  installCount: integer("install_count").notNull().default(0),
+  avgRating: text("avg_rating"),
+  reviewCount: integer("review_count").notNull().default(0),
+  screenshots: jsonb("screenshots").$type<{ url: string; caption: string }[]>().notNull().default([]),
+  readmeContent: text("readme_content"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertListingSchema = createInsertSchema(listings).omit({
+  id: true,
+  installCount: true,
+  avgRating: true,
+  reviewCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertListing = z.infer<typeof insertListingSchema>;
+export type Listing = typeof listings.$inferSelect;
+
+export const listingReviews = pgTable("listing_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertListingReviewSchema = createInsertSchema(listingReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertListingReview = z.infer<typeof insertListingReviewSchema>;
+export type ListingReview = typeof listingReviews.$inferSelect;
+
+export const marketplaceCollections = pgTable("marketplace_collections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  slug: text("slug").notNull().unique(),
+  curatedBy: varchar("curated_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCollectionSchema = createInsertSchema(marketplaceCollections).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertCollection = z.infer<typeof insertCollectionSchema>;
+export type MarketplaceCollection = typeof marketplaceCollections.$inferSelect;
+
+export const collectionListings = pgTable("collection_listings", {
+  collectionId: varchar("collection_id").notNull().references(() => marketplaceCollections.id, { onDelete: "cascade" }),
+  listingId: varchar("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  position: integer("position").notNull().default(0),
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+});
+
+export type CollectionListing = typeof collectionListings.$inferSelect;
+
+export const listingInstalls = pgTable("listing_installs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  listingId: varchar("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  version: text("version").notNull(),
+  installedAt: timestamp("installed_at").notNull().defaultNow(),
+});
+
+export type ListingInstall = typeof listingInstalls.$inferSelect;
+
+export const LISTING_TYPES = [
+  "agent", "skill", "template", "mcp-config", "hook-recipe", "service-blueprint",
+] as const;
+export type ListingType = typeof LISTING_TYPES[number];
