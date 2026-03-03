@@ -1,6 +1,8 @@
 import {
   Bot, Mail, FileText, Calendar, MessageSquare, Search,
   Zap, Shield, BarChart3, Users, Puzzle,
+  GitBranch, Repeat, Clock, CircleStop, Sparkles,
+  Globe, Code, Shuffle, Layers, Bell,
 } from "lucide-react";
 
 export const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -15,4 +17,14 @@ export const iconMap: Record<string, React.ComponentType<{ className?: string }>
   chart: BarChart3,
   users: Users,
   puzzle: Puzzle,
+  "git-branch": GitBranch,
+  repeat: Repeat,
+  clock: Clock,
+  "circle-stop": CircleStop,
+  sparkles: Sparkles,
+  globe: Globe,
+  code: Code,
+  shuffle: Shuffle,
+  layers: Layers,
+  bell: Bell,
 };
