@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/app-header";
 import Home from "@/pages/home";
 import AgentDetail from "@/pages/agent-detail";
 import AgentBuilder from "@/pages/agent-builder";
+import AgentRecommend from "@/pages/agent-recommend";
 import Templates from "@/pages/templates";
 import TemplateDetail from "@/pages/template-detail";
 import Skills from "@/pages/skills";
@@ -19,6 +20,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/agents/new" component={AgentBuilder} />
+      <Route path="/agents/recommend" component={AgentRecommend} />
       <Route path="/agents/:id/edit" component={AgentBuilder} />
       <Route path="/agents/:id" component={AgentDetail} />
       <Route path="/templates" component={Templates} />
