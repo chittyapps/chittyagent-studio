@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
 import type { Agent, Recommendation, RecommendationResponse } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -82,29 +82,35 @@ export default function AgentRecommend() {
     },
   });
 
-  const openInBuilder = async () => {
-    const rec = recommendation!.result as RecommendationResponse;
-    const res = await apiRequest("POST", "/api/agents", {
-      name: rec.name,
-      description: rec.description,
-      prompt: rec.prompt,
-      category: rec.category,
-      icon: rec.icon,
-      color: rec.color,
-      triggerType: rec.triggerType,
-      triggerConfig: rec.triggerConfig,
-      skillIds: rec.skillIds,
-      actions: rec.actions,
-      status: "draft",
-    });
-    const agent = await res.json();
-    if (recommendation) {
-      await apiRequest("PATCH", `/api/recommendations/${recommendation.id}/accept`, {
-        agentId: agent.id,
+  const openInBuilderMutation = useMutationWithToast<Agent, void>({
+    mutationFn: async () => {
+      const rec = recommendation!.result as RecommendationResponse;
+      const res = await apiRequest("POST", "/api/agents", {
+        name: rec.name,
+        description: rec.description,
+        prompt: rec.prompt,
+        category: rec.category,
+        icon: rec.icon,
+        color: rec.color,
+        triggerType: rec.triggerType,
+        triggerConfig: rec.triggerConfig,
+        skillIds: rec.skillIds,
+        actions: rec.actions,
+        status: "draft",
       });
-    }
-    navigate(`/agents/${agent.id}/edit`);
-  };
+      return res.json();
+    },
+    invalidateKeys: [["/api/agents"], ["/api/recommendations"]],
+    successMessage: "Agent created — opening builder",
+    onSuccess: async (agent) => {
+      if (recommendation) {
+        await apiRequest("PATCH", `/api/recommendations/${recommendation.id}/accept`, {
+          agentId: agent.id,
+        });
+      }
+      navigate(`/agents/${agent.id}/edit`);
+    },
+  });
 
   const rec = recommendation?.result as RecommendationResponse | undefined;
   const IconComponent = rec ? iconMap[rec.icon] || Bot : Bot;
@@ -263,7 +269,8 @@ export default function AgentRecommend() {
             </Button>
             <Button
               variant="outline"
-              onClick={openInBuilder}
+              onClick={() => openInBuilderMutation.mutate()}
+              disabled={openInBuilderMutation.isPending}
               data-testid="button-open-in-builder"
             >
               <Pencil className="w-4 h-4 mr-1" />

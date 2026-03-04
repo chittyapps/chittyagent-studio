@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { syncGithubRepos } from "./seed";
 import { createAgentSchema, updateAgentSchema, recommendationRequestSchema } from "@shared/schema";
-import { generateRecommendation, isGatewayConfigured } from "./gateway";
+import { generateRecommendation, isGatewayConfigured, GatewayError } from "./gateway";
 
 function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
   return async (req: any, res: any) => {
@@ -171,12 +171,20 @@ export async function registerRoutes(
       storage.getTemplates(),
     ]);
 
-    const recommendation = await generateRecommendation(
-      parsed.data.prompt,
-      allSkills,
-      allTemplates,
-      { category: parsed.data.category, triggerType: parsed.data.triggerType },
-    );
+    let recommendation;
+    try {
+      recommendation = await generateRecommendation(
+        parsed.data.prompt,
+        allSkills,
+        allTemplates,
+        { category: parsed.data.category, triggerType: parsed.data.triggerType },
+      );
+    } catch (err) {
+      if (err instanceof GatewayError) {
+        return res.status(err.statusCode || 502).json({ message: err.message });
+      }
+      throw err;
+    }
 
     // Validate that returned skillIds actually exist
     const validSkillIds = recommendation.skillIds.filter(

@@ -58,7 +58,7 @@ describe("useMutationWithToast Hook", () => {
       { name: "skills.tsx", mutations: ["installMutation"] },
       { name: "repos.tsx", mutations: ["syncMutation"] },
       { name: "agent-builder.tsx", mutations: ["saveMutation"] },
-      { name: "agent-recommend.tsx", mutations: ["generateMutation", "createAgentMutation"] },
+      { name: "agent-recommend.tsx", mutations: ["generateMutation", "createAgentMutation", "openInBuilderMutation"] },
     ];
 
     for (const { name, mutations } of pages) {
