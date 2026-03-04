@@ -4,7 +4,8 @@ import {
   type AgentRun, type InsertAgentRun,
   type Skill, type InsertSkill,
   type GithubRepo, type InsertGithubRepo,
-  users, agents, agentRuns, skills, githubRepos,
+  type Recommendation, type InsertRecommendation,
+  users, agents, agentRuns, skills, githubRepos, recommendations,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -36,6 +37,11 @@ export interface IStorage {
   getGithubRepos(): Promise<GithubRepo[]>;
   createGithubRepo(repo: InsertGithubRepo): Promise<GithubRepo>;
   clearGithubRepos(): Promise<void>;
+
+  getRecommendations(): Promise<Recommendation[]>;
+  getRecommendation(id: string): Promise<Recommendation | undefined>;
+  createRecommendation(data: InsertRecommendation): Promise<Recommendation>;
+  acceptRecommendation(id: string, agentId: string): Promise<Recommendation | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -156,6 +162,29 @@ export class DatabaseStorage implements IStorage {
 
   async clearGithubRepos(): Promise<void> {
     await db.delete(githubRepos);
+  }
+
+  async getRecommendations(): Promise<Recommendation[]> {
+    return db.select().from(recommendations).orderBy(desc(recommendations.createdAt)).limit(50);
+  }
+
+  async getRecommendation(id: string): Promise<Recommendation | undefined> {
+    const [rec] = await db.select().from(recommendations).where(eq(recommendations.id, id));
+    return rec;
+  }
+
+  async createRecommendation(data: InsertRecommendation): Promise<Recommendation> {
+    const [rec] = await db.insert(recommendations).values(data as any).returning();
+    return rec;
+  }
+
+  async acceptRecommendation(id: string, agentId: string): Promise<Recommendation | undefined> {
+    const [rec] = await db
+      .update(recommendations)
+      .set({ accepted: true, agentId })
+      .where(eq(recommendations.id, id))
+      .returning();
+    return rec;
   }
 }
 
