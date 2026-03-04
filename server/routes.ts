@@ -2,7 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { syncGithubRepos } from "./seed";
-import { createAgentSchema, updateAgentSchema } from "@shared/schema";
+import { createAgentSchema, updateAgentSchema, recommendationRequestSchema } from "@shared/schema";
+import { generateRecommendation, isGatewayConfigured } from "./gateway";
 
 function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
   return async (req: any, res: any) => {
@@ -152,6 +153,62 @@ export async function registerRoutes(
     await syncGithubRepos();
     const repos = await storage.getGithubRepos();
     res.json({ success: true, count: repos.length });
+  }));
+
+  // Recommendation routes
+
+  app.post("/api/recommendations/generate", asyncRoute(async (req, res) => {
+    if (!isGatewayConfigured()) {
+      return res.status(503).json({ message: "Recommendation service not configured" });
+    }
+    const parsed = recommendationRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.issues.map(i => i.message).join(", ") });
+    }
+
+    const [allSkills, allTemplates] = await Promise.all([
+      storage.getSkills(),
+      storage.getTemplates(),
+    ]);
+
+    const recommendation = await generateRecommendation(
+      parsed.data.prompt,
+      allSkills,
+      allTemplates,
+      { category: parsed.data.category, triggerType: parsed.data.triggerType },
+    );
+
+    // Validate that returned skillIds actually exist
+    const validSkillIds = recommendation.skillIds.filter(
+      (id) => allSkills.some((s) => s.id === id)
+    );
+    recommendation.skillIds = validSkillIds;
+
+    const stored = await storage.createRecommendation({
+      prompt: parsed.data.prompt,
+      category: parsed.data.category || recommendation.category,
+      result: recommendation,
+      confidence: Math.round(recommendation.confidence * 100),
+      accepted: false,
+      agentId: null,
+    });
+
+    res.json(stored);
+  }));
+
+  app.get("/api/recommendations", asyncRoute(async (_req, res) => {
+    const recs = await storage.getRecommendations();
+    res.json(recs);
+  }));
+
+  app.patch("/api/recommendations/:id/accept", asyncRoute(async (req, res) => {
+    const { agentId } = req.body;
+    if (!agentId) {
+      return res.status(400).json({ message: "agentId is required" });
+    }
+    const rec = await storage.acceptRecommendation(req.params.id, agentId);
+    if (!rec) return res.status(404).json({ message: "Recommendation not found" });
+    res.json(rec);
   }));
 
   return httpServer;
