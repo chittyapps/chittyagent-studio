@@ -116,6 +116,34 @@ export const createAgentSchema = z.object({
 
 export const updateAgentSchema = createAgentSchema.partial();
 
+export const recommendationRequestSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required").max(2000),
+  category: z.string().optional(),
+  triggerType: z.string().optional(),
+});
+
+export type RecommendationRequest = z.infer<typeof recommendationRequestSchema>;
+
+export const recommendationResponseSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  prompt: z.string(),
+  category: z.string(),
+  icon: z.string(),
+  color: z.string(),
+  triggerType: z.string(),
+  triggerConfig: z.record(z.unknown()),
+  skillIds: z.array(z.string()),
+  actions: z.object({
+    nodes: z.array(z.any()),
+    edges: z.array(z.any()),
+  }),
+  confidence: z.number().min(0).max(1),
+  reasoning: z.string(),
+});
+
+export type RecommendationResponse = z.infer<typeof recommendationResponseSchema>;
+
 export const agentRuns = pgTable("agent_runs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   agentId: varchar("agent_id").notNull(),
@@ -136,6 +164,25 @@ export const insertAgentRunSchema = createInsertSchema(agentRuns).omit({
 
 export type InsertAgentRun = z.infer<typeof insertAgentRunSchema>;
 export type AgentRun = typeof agentRuns.$inferSelect;
+
+export const recommendations = pgTable("recommendations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prompt: text("prompt").notNull(),
+  category: text("category"),
+  result: jsonb("result").$type<RecommendationResponse>().notNull(),
+  confidence: integer("confidence").notNull().default(0),
+  accepted: boolean("accepted").notNull().default(false),
+  agentId: varchar("agent_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertRecommendationSchema = createInsertSchema(recommendations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
+export type Recommendation = typeof recommendations.$inferSelect;
 
 export const skills = pgTable("skills", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
