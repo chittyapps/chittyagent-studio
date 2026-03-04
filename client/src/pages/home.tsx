@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Card } from "@/components/ui/card";
 import { iconMap } from "@/lib/icons";
 import {
-  Sparkles, LayoutGrid, ArrowRight, Puzzle,
+  Sparkles, LayoutGrid, ArrowRight, Puzzle, Wand2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,24 @@ export default function Home() {
         <p className="text-sm text-muted-foreground ml-8">
           Build AI agents to automate your everyday work
         </p>
+        <div className="flex items-center gap-2 mt-3 ml-8">
+          <Button
+            size="sm"
+            onClick={() => navigate("/agents/recommend")}
+            data-testid="button-recommend"
+          >
+            <Wand2 className="w-3.5 h-3.5 mr-1.5" />
+            Get AI Recommendation
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/agents/new")}
+            data-testid="button-create-agent"
+          >
+            Create Agent
+          </Button>
+        </div>
       </div>
 
       {agentsLoading ? (
