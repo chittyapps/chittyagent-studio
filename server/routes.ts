@@ -6,6 +6,37 @@ import { createAgentSchema, updateAgentSchema, recommendationRequestSchema } fro
 import { generateRecommendation, isGatewayConfigured, GatewayError } from "./gateway";
 import { executeAgent } from "./executor";
 
+function buildSystemPrompt(agent: any, skills: any[], workflowNodes: any[]): string {
+  const parts: string[] = [];
+
+  parts.push(`You are "${agent.name}" - ${agent.description}`);
+
+  if (agent.prompt) {
+    parts.push(`\n## Instructions\n${agent.prompt}`);
+  }
+
+  if (workflowNodes.length > 0) {
+    parts.push(`\n## Workflow Steps`);
+    workflowNodes.forEach((node: any, i: number) => {
+      const label = node.data?.label || node.type;
+      const prompt = node.data?.prompt || "";
+      parts.push(`${i + 1}. [${node.type}] ${label}${prompt ? `: ${prompt}` : ""}`);
+    });
+  }
+
+  if (skills.length > 0) {
+    parts.push(`\n## Available Skills`);
+    skills.forEach((skill: any) => {
+      const caps = skill.capabilities?.length ? ` (${skill.capabilities.join(", ")})` : "";
+      parts.push(`- ${skill.name}: ${skill.description}${caps}`);
+    });
+  }
+
+  parts.push(`\n## Behavior\n- Category: ${agent.category}\n- Trigger: ${agent.triggerType}\n- Source: ChittyAgent Studio (chitty.cc/os)`);
+
+  return parts.join("\n");
+}
+
 function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
   return async (req: any, res: any) => {
     try {
@@ -93,6 +124,114 @@ export async function registerRoutes(
   app.get("/api/agents/:id/runs", asyncRoute(async (req, res) => {
     const runs = await storage.getAgentRuns(req.params.id);
     res.json(runs);
+  }));
+
+  app.get("/api/agents/:id/export/:format", asyncRoute(async (req, res) => {
+    const agent = await storage.getAgent(req.params.id);
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+    const attachedSkills = [];
+    if (agent.skillIds && agent.skillIds.length > 0) {
+      for (const sid of agent.skillIds) {
+        const skill = await storage.getSkill(sid);
+        if (skill) attachedSkills.push(skill);
+      }
+    }
+
+    const workflowNodes = (agent.actions as any)?.nodes || [];
+    const format = req.params.format;
+
+    if (format === "chatgpt") {
+      const toolDefs = attachedSkills.map(s => ({
+        type: "function" as const,
+        function: {
+          name: s.name.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase(),
+          description: s.description,
+          parameters: { type: "object", properties: {}, required: [] },
+        },
+      }));
+
+      const systemPrompt = buildSystemPrompt(agent, attachedSkills, workflowNodes);
+
+      const exportData = {
+        platform: "openai",
+        format_version: "1.0",
+        model: "gpt-4o",
+        name: agent.name,
+        description: agent.description,
+        instructions: systemPrompt,
+        tools: toolDefs,
+        conversation_starters: [
+          `Run the ${agent.name} workflow`,
+          `What can this agent do?`,
+        ],
+      };
+      res.json(exportData);
+
+    } else if (format === "claude") {
+      const systemPrompt = buildSystemPrompt(agent, attachedSkills, workflowNodes);
+
+      const toolDefs = attachedSkills.map(s => ({
+        name: s.name.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase(),
+        description: s.description,
+        input_schema: { type: "object", properties: {}, required: [] },
+      }));
+
+      const exportData = {
+        platform: "anthropic",
+        format_version: "1.0",
+        model: "claude-sonnet-4-20250514",
+        name: agent.name,
+        description: agent.description,
+        system: systemPrompt,
+        tools: toolDefs,
+        metadata: {
+          category: agent.category,
+          trigger: agent.triggerType,
+          source: "ChittyAgent Studio",
+        },
+      };
+      res.json(exportData);
+
+    } else if (format === "api") {
+      const systemPrompt = buildSystemPrompt(agent, attachedSkills, workflowNodes);
+
+      const exportData = {
+        platform: "generic",
+        format_version: "1.0",
+        agent: {
+          name: agent.name,
+          description: agent.description,
+          category: agent.category,
+          trigger: agent.triggerType,
+        },
+        system_prompt: systemPrompt,
+        skills: attachedSkills.map(s => ({
+          name: s.name,
+          description: s.description,
+          category: s.category,
+          capabilities: s.capabilities,
+        })),
+        workflow: {
+          nodes: workflowNodes.map((n: any) => ({
+            id: n.id,
+            type: n.type,
+            label: n.data?.label || n.type,
+            config: n.data || {},
+          })),
+          edges: (agent.actions as any)?.edges || [],
+        },
+        metadata: {
+          exported_at: new Date().toISOString(),
+          source: "ChittyAgent Studio",
+          source_url: "https://chitty.cc/os",
+        },
+      };
+      res.json(exportData);
+
+    } else {
+      res.status(400).json({ message: "Invalid format. Use: chatgpt, claude, or api" });
+    }
   }));
 
   app.get("/api/templates", asyncRoute(async (_req, res) => {

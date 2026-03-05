@@ -46,6 +46,7 @@ Templates are stored as agents with `isTemplate: true`.
 | DELETE | `/api/agents/:id` | Delete agent |
 | POST | `/api/agents/:id/run` | Run agent (real AI execution via OpenAI gpt-4o) |
 | GET | `/api/agents/:id/runs` | Get run history with step logs |
+| GET | `/api/agents/:id/export/:format` | Export agent config (chatgpt, claude, api) |
 | GET | `/api/templates` | List templates |
 | GET | `/api/templates/:id` | Get template details |
 | POST | `/api/templates/:id/use` | Create agent from template |
@@ -71,7 +72,8 @@ Templates are stored as agents with `isTemplate: true`.
 - `AppHeader` - Top navigation with Skills, Repos, Connect, search, theme toggle, create button
 - `AgentCard` / `TemplateCard` - Card components for agents/templates
 - `ThemeProvider` - Light/dark mode support
-- `RunHistory` - Agent execution history display
+- `RunHistory` - Agent execution history display with expandable step logs
+- `ExportDialog` - Export agents to ChatGPT, Claude, or generic API format
 - `EmptyState` - Shown when no agents exist
 
 ## Design

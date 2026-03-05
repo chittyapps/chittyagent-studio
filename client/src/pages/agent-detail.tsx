@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RunHistoryItem, RunHistoryEmpty } from "@/components/run-history";
+import { ExportDialog } from "@/components/export-dialog";
 import { iconMap } from "@/lib/icons";
 import { STATUS_COLORS, TRIGGER_LABELS } from "@/lib/constants";
 import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
@@ -176,6 +177,7 @@ export default function AgentDetail() {
         >
           <Settings className="w-4 h-4 mr-1" /> Edit
         </Button>
+        <ExportDialog agentId={agentId!} agentName={agent.name} />
         <Button
           size="icon"
           variant="ghost"
