@@ -5,6 +5,7 @@ import { syncGithubRepos } from "./seed";
 import { createAgentSchema, updateAgentSchema, recommendationRequestSchema } from "@shared/schema";
 import { generateRecommendation, isGatewayConfigured, GatewayError } from "./gateway";
 import { executeAgent } from "./executor";
+import { handleEmbedChat, generateWidgetScript, checkRateLimit, validateMessages } from "./embed";
 
 function buildSystemPrompt(agent: any, skills: any[], workflowNodes: any[]): string {
   const parts: string[] = [];
@@ -427,6 +428,54 @@ export async function registerRoutes(
     if (!rec) return res.status(404).json({ message: "Recommendation not found" });
     res.json(rec);
   }));
+
+  app.post("/api/embed/:agentId/chat", asyncRoute(async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (!checkRateLimit(req.params.agentId)) {
+      return res.status(429).json({ message: "Rate limit exceeded. Try again in a minute." });
+    }
+
+    const validated = validateMessages(req.body?.messages);
+    if (!validated) {
+      return res.status(400).json({ message: "Valid messages array with role and content is required" });
+    }
+
+    const reply = await handleEmbedChat(req.params.agentId, validated);
+    res.json({ reply });
+  }));
+
+  app.options("/api/embed/:agentId/chat", (_req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.status(204).end();
+  });
+
+  app.get("/api/embed/:agentId/info", asyncRoute(async (req, res) => {
+    const agent = await storage.getAgent(req.params.agentId);
+    if (!agent) return res.status(404).json({ message: "Agent not found" });
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.json({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      icon: agent.icon,
+      color: agent.color,
+      category: agent.category,
+    });
+  }));
+
+  app.get("/embed/widget.js", (_req, res) => {
+    const protocol = _req.headers["x-forwarded-proto"] || _req.protocol;
+    const host = _req.headers["x-forwarded-host"] || _req.headers.host;
+    const baseUrl = `${protocol}://${host}`;
+    res.setHeader("Content-Type", "application/javascript");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cache-Control", "public, max-age=300");
+    res.send(generateWidgetScript(baseUrl));
+  });
 
   return httpServer;
 }

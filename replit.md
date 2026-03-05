@@ -59,6 +59,9 @@ Templates are stored as agents with `isTemplate: true`.
 | PATCH | `/api/connections/:id` | Update connection |
 | DELETE | `/api/connections/:id` | Delete connection |
 | POST | `/api/connections/:id/test` | Test connection connectivity |
+| POST | `/api/embed/:agentId/chat` | Embeddable chat endpoint (CORS-enabled, rate-limited) |
+| GET | `/api/embed/:agentId/info` | Public agent info for widget |
+| GET | `/embed/widget.js` | Embeddable chat widget script |
 
 ## Seed Data
 
@@ -73,7 +76,7 @@ Templates are stored as agents with `isTemplate: true`.
 - `AgentCard` / `TemplateCard` - Card components for agents/templates
 - `ThemeProvider` - Light/dark mode support
 - `RunHistory` - Agent execution history display with expandable step logs
-- `ExportDialog` - Export agents to ChatGPT, Claude, or generic API format
+- `ExportDialog` - Export agents to ChatGPT, Claude, generic API, or generate embeddable widget code
 - `EmptyState` - Shown when no agents exist
 
 ## Design

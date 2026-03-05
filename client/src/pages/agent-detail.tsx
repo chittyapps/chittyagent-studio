@@ -177,7 +177,7 @@ export default function AgentDetail() {
         >
           <Settings className="w-4 h-4 mr-1" /> Edit
         </Button>
-        <ExportDialog agentId={agentId!} agentName={agent.name} />
+        <ExportDialog agentId={agentId!} agentName={agent.name} agentColor={agent.color} />
         <Button
           size="icon"
           variant="ghost"
