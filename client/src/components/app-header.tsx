@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { Sun, Moon, Plus, Search, Sparkles, Puzzle } from "lucide-react";
+import { Sun, Moon, Plus, Search, Sparkles, Puzzle, Plug } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 import { useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,15 @@ export function AppHeader() {
         >
           <SiGithub className="w-4 h-4 mr-1" />
           <span className="hidden sm:inline">Repos</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => navigate("/connections")}
+          data-testid="button-nav-connections"
+        >
+          <Plug className="w-4 h-4 mr-1" />
+          <span className="hidden sm:inline">Connect</span>
         </Button>
         <Button
           size="icon"

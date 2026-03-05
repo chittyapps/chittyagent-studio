@@ -221,6 +221,26 @@ export const insertSkillSchema = createInsertSchema(skills).omit({
 export type InsertSkill = z.infer<typeof insertSkillSchema>;
 export type Skill = typeof skills.$inferSelect;
 
+export const connections = pgTable("connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  provider: text("provider").notNull(),
+  status: text("status").notNull().default("disconnected"),
+  config: jsonb("config").$type<Record<string, unknown>>().default({}),
+  icon: text("icon").notNull().default("plug"),
+  color: text("color").notNull().default("#4285f4"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertConnectionSchema = createInsertSchema(connections).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertConnection = z.infer<typeof insertConnectionSchema>;
+export type Connection = typeof connections.$inferSelect;
+
 export const githubRepos = pgTable("github_repos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),

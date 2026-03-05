@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { agents, skills, githubRepos } from "@shared/schema";
+import { agents, skills, githubRepos, connections } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const templateData = [
@@ -563,7 +563,66 @@ export async function seedDatabase() {
     }
 
     await syncGithubRepos();
+    await seedConnections();
   } catch (error) {
     console.error("Error seeding database:", error);
+  }
+}
+
+const defaultConnections = [
+  {
+    name: "Replit AI (OpenAI)",
+    type: "ai",
+    provider: "replit-ai",
+    status: "connected",
+    icon: "sparkles",
+    color: "#06b6d4",
+    config: { model: "gpt-4o", description: "AI processing for LLM action nodes" },
+  },
+  {
+    name: "GitHub",
+    type: "source",
+    provider: "github",
+    status: "connected",
+    icon: "github",
+    color: "#333333",
+    config: { orgs: ["chittyos", "chittyfoundation", "chittyapps", "furnished-condos"] },
+  },
+  {
+    name: "Webhook Endpoint",
+    type: "trigger",
+    provider: "webhook",
+    status: "disconnected",
+    icon: "webhook",
+    color: "#8b5cf6",
+    config: { description: "Receive external webhook triggers" },
+  },
+  {
+    name: "Email (SMTP)",
+    type: "action",
+    provider: "email",
+    status: "disconnected",
+    icon: "mail",
+    color: "#ea4335",
+    config: { description: "Send email notifications from agents" },
+  },
+  {
+    name: "ChittyOS API",
+    type: "platform",
+    provider: "chittyos",
+    status: "disconnected",
+    icon: "server",
+    color: "#4285f4",
+    config: { url: "https://chitty.cc/os", description: "Deploy agents to ChittyOS" },
+  },
+];
+
+async function seedConnections() {
+  const existing = await db.select().from(connections);
+  if (existing.length === 0) {
+    for (const conn of defaultConnections) {
+      await db.insert(connections).values(conn);
+    }
+    console.log(`Seeded ${defaultConnections.length} default connections`);
   }
 }

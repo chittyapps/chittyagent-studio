@@ -13,6 +13,7 @@ import Templates from "@/pages/templates";
 import TemplateDetail from "@/pages/template-detail";
 import Skills from "@/pages/skills";
 import Repos from "@/pages/repos";
+import Connections from "@/pages/connections";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/templates/:id" component={TemplateDetail} />
       <Route path="/skills" component={Skills} />
       <Route path="/repos" component={Repos} />
+      <Route path="/connections" component={Connections} />
       <Route component={NotFound} />
     </Switch>
   );

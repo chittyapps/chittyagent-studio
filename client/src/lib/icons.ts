@@ -3,7 +3,9 @@ import {
   Zap, Shield, BarChart3, Users, Puzzle,
   GitBranch, Repeat, Clock, CircleStop, Sparkles,
   Globe, Code, Shuffle, Layers, Bell,
+  Plug, Server, Webhook,
 } from "lucide-react";
+import { SiGithub } from "react-icons/si";
 
 export const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   bot: Bot,
@@ -27,4 +29,8 @@ export const iconMap: Record<string, React.ComponentType<{ className?: string }>
   shuffle: Shuffle,
   layers: Layers,
   bell: Bell,
+  plug: Plug,
+  server: Server,
+  webhook: Webhook,
+  github: SiGithub as any,
 };

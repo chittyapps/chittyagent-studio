@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { syncGithubRepos } from "./seed";
 import { createAgentSchema, updateAgentSchema, recommendationRequestSchema } from "@shared/schema";
 import { generateRecommendation, isGatewayConfigured, GatewayError } from "./gateway";
+import { executeAgent } from "./executor";
 
 function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
   return async (req: any, res: any) => {
@@ -68,23 +69,23 @@ export async function registerRoutes(
       status: "running",
       triggerInfo: "Manual trigger",
       stepsCompleted: 0,
-      totalSteps: 3,
+      totalSteps: 1,
     });
 
     await storage.incrementRunCount(agent.id);
 
-    setTimeout(async () => {
+    executeAgent(run.id, agent).catch(async (err) => {
+      console.error("Agent execution failed:", err);
       try {
         await storage.updateAgentRun(run.id, {
-          status: "completed",
-          result: `Successfully completed: ${agent.name} processed 3 steps.`,
-          stepsCompleted: 3,
+          status: "failed",
+          result: `Execution error: ${err.message}`,
           completedAt: new Date(),
         });
       } catch (e) {
-        console.error("Failed to update run:", e);
+        console.error("Failed to update run after error:", e);
       }
-    }, 2000);
+    });
 
     res.json(run);
   }));
@@ -153,6 +154,75 @@ export async function registerRoutes(
     await syncGithubRepos();
     const repos = await storage.getGithubRepos();
     res.json({ success: true, count: repos.length });
+  }));
+
+  // Connection routes
+
+  app.get("/api/connections", asyncRoute(async (_req, res) => {
+    const conns = await storage.getConnections();
+    res.json(conns);
+  }));
+
+  app.post("/api/connections", asyncRoute(async (req, res) => {
+    const conn = await storage.createConnection(req.body);
+    res.status(201).json(conn);
+  }));
+
+  app.patch("/api/connections/:id", asyncRoute(async (req, res) => {
+    const conn = await storage.updateConnection(req.params.id, req.body);
+    if (!conn) return res.status(404).json({ message: "Connection not found" });
+    res.json(conn);
+  }));
+
+  app.delete("/api/connections/:id", asyncRoute(async (req, res) => {
+    const deleted = await storage.deleteConnection(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Connection not found" });
+    res.json({ success: true });
+  }));
+
+  app.post("/api/connections/:id/test", asyncRoute(async (req, res) => {
+    const conn = await storage.getConnection(req.params.id);
+    if (!conn) return res.status(404).json({ message: "Connection not found" });
+
+    let testResult = { success: false, message: "Unknown connection type" };
+
+    if (conn.provider === "openai" || conn.provider === "replit-ai") {
+      try {
+        const OpenAI = (await import("openai")).default;
+        const client = new OpenAI({
+          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        });
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: "Say 'connected' in one word." }],
+          max_tokens: 10,
+        });
+        testResult = {
+          success: true,
+          message: `AI connected: ${response.choices[0]?.message?.content || "ok"}`,
+        };
+      } catch (e: any) {
+        testResult = { success: false, message: e.message };
+      }
+    } else if (conn.provider === "github") {
+      testResult = {
+        success: !!process.env.GITHUB_TOKEN,
+        message: process.env.GITHUB_TOKEN ? "GitHub token configured" : "No GitHub token found",
+      };
+    } else if (conn.provider === "webhook") {
+      testResult = { success: true, message: "Webhook endpoint ready to receive" };
+    } else if (conn.provider === "email") {
+      testResult = { success: true, message: "Email service configured (simulation mode)" };
+    }
+
+    if (testResult.success) {
+      await storage.updateConnection(conn.id, { status: "connected" });
+    } else {
+      await storage.updateConnection(conn.id, { status: "error" });
+    }
+
+    res.json(testResult);
   }));
 
   // Recommendation routes

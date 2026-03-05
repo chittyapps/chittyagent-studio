@@ -14,11 +14,13 @@ import {
   Bot, ArrowLeft, Play, Pause,
   Trash2, Settings, Clock, Activity, Loader2, Zap
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export default function AgentDetail() {
   const [, params] = useRoute("/agents/:id");
   const [, navigate] = useLocation();
   const agentId = params?.id;
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: agent, isLoading } = useQuery<Agent>({
     queryKey: ["/api/agents", agentId],
@@ -29,6 +31,23 @@ export default function AgentDetail() {
     queryKey: ["/api/agents", agentId, "runs"],
     enabled: !!agentId,
   });
+
+  const hasRunningRun = runs?.some(r => r.status === "running");
+
+  useEffect(() => {
+    if (hasRunningRun) {
+      pollRef.current = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/agents", agentId, "runs"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/agents", agentId] });
+      }, 1500);
+    } else if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [hasRunningRun, agentId]);
 
   const runMutation = useMutationWithToast({
     mutationFn: async () => {
@@ -122,15 +141,15 @@ export default function AgentDetail() {
         <Button
           size="sm"
           onClick={() => runMutation.mutate()}
-          disabled={runMutation.isPending}
+          disabled={runMutation.isPending || hasRunningRun}
           data-testid="button-run-agent"
         >
-          {runMutation.isPending ? (
+          {runMutation.isPending || hasRunningRun ? (
             <Loader2 className="w-4 h-4 mr-1 animate-spin" />
           ) : (
             <Play className="w-4 h-4 mr-1" />
           )}
-          Run now
+          {hasRunningRun ? "Running..." : "Run now"}
         </Button>
         <Button
           size="sm"

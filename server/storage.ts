@@ -5,7 +5,8 @@ import {
   type Skill, type InsertSkill,
   type GithubRepo, type InsertGithubRepo,
   type Recommendation, type InsertRecommendation,
-  users, agents, agentRuns, skills, githubRepos, recommendations,
+  type Connection, type InsertConnection,
+  users, agents, agentRuns, skills, githubRepos, recommendations, connections,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -33,6 +34,12 @@ export interface IStorage {
   getSkill(id: string): Promise<Skill | undefined>;
   createSkill(skill: InsertSkill): Promise<Skill>;
   incrementSkillInstall(id: string): Promise<void>;
+
+  getConnections(): Promise<Connection[]>;
+  getConnection(id: string): Promise<Connection | undefined>;
+  createConnection(data: InsertConnection): Promise<Connection>;
+  updateConnection(id: string, data: Partial<InsertConnection>): Promise<Connection | undefined>;
+  deleteConnection(id: string): Promise<boolean>;
 
   getGithubRepos(): Promise<GithubRepo[]>;
   createGithubRepo(repo: InsertGithubRepo): Promise<GithubRepo>;
@@ -149,6 +156,34 @@ export class DatabaseStorage implements IStorage {
       .update(skills)
       .set({ installCount: sql`${skills.installCount} + 1` })
       .where(eq(skills.id, id));
+  }
+
+  async getConnections(): Promise<Connection[]> {
+    return db.select().from(connections).orderBy(desc(connections.createdAt));
+  }
+
+  async getConnection(id: string): Promise<Connection | undefined> {
+    const [conn] = await db.select().from(connections).where(eq(connections.id, id));
+    return conn;
+  }
+
+  async createConnection(data: InsertConnection): Promise<Connection> {
+    const [conn] = await db.insert(connections).values(data).returning();
+    return conn;
+  }
+
+  async updateConnection(id: string, data: Partial<InsertConnection>): Promise<Connection | undefined> {
+    const [conn] = await db
+      .update(connections)
+      .set(data)
+      .where(eq(connections.id, id))
+      .returning();
+    return conn;
+  }
+
+  async deleteConnection(id: string): Promise<boolean> {
+    const result = await db.delete(connections).where(eq(connections.id, id)).returning();
+    return result.length > 0;
   }
 
   async getGithubRepos(): Promise<GithubRepo[]> {
