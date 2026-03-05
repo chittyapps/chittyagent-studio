@@ -147,7 +147,8 @@ export default function AgentBuilder() {
 
   const selectedIcon = iconOptions.find((o) => o.value === form.watch("icon"));
   const selectedColor = form.watch("color");
-  const workflowData = form.watch("actions") || { nodes: [], edges: [] };
+  const rawActions = form.watch("actions");
+  const workflowData = (rawActions && !Array.isArray(rawActions) && rawActions.nodes) ? rawActions : { nodes: [], edges: [] };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">

@@ -38,10 +38,12 @@ function getNextId() {
 
 function WorkflowCanvasInner({ value, onChange }: WorkflowCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const safeNodes = Array.isArray(value?.nodes) ? value.nodes : [];
+  const safeEdges = Array.isArray(value?.edges) ? value.edges : [];
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    value.nodes.map((n) => ({ ...n, type: "workflowNode" }))
+    safeNodes.map((n) => ({ ...n, type: "workflowNode" }))
   );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(value.edges);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(safeEdges);
 
   const onConnect = useCallback(
     (params: Connection) => {
