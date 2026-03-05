@@ -83,7 +83,7 @@ export function RunHistoryItem({ run }: { run: AgentRun }) {
 
             return (
               <div
-                key={i}
+                key={`${step.nodeId}-${i}`}
                 className={`rounded-lg border p-3 ${stepStyle}`}
                 data-testid={`step-log-${i}`}
               >

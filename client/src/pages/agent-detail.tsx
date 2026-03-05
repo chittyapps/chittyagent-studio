@@ -35,17 +35,21 @@ export default function AgentDetail() {
   const hasRunningRun = runs?.some(r => r.status === "running");
 
   useEffect(() => {
-    if (hasRunningRun) {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    if (hasRunningRun && agentId) {
       pollRef.current = setInterval(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/agents", agentId, "runs"] });
         queryClient.invalidateQueries({ queryKey: ["/api/agents", agentId] });
       }, 1500);
-    } else if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
     }
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     };
   }, [hasRunningRun, agentId]);
 
