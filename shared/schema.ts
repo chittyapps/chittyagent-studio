@@ -144,6 +144,16 @@ export const recommendationResponseSchema = z.object({
 
 export type RecommendationResponse = z.infer<typeof recommendationResponseSchema>;
 
+export interface StepLog {
+  index: number;
+  nodeType: string;
+  label: string;
+  status: "pending" | "running" | "completed" | "failed";
+  output?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 export const agentRuns = pgTable("agent_runs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   agentId: varchar("agent_id").notNull(),
@@ -152,6 +162,7 @@ export const agentRuns = pgTable("agent_runs", {
   result: text("result"),
   stepsCompleted: integer("steps_completed").notNull().default(0),
   totalSteps: integer("total_steps").notNull().default(1),
+  stepLogs: jsonb("step_logs").$type<StepLog[]>().default([]),
   startedAt: timestamp("started_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
 });
