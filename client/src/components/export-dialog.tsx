@@ -11,12 +11,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Upload, Copy, Check, Download, ExternalLink, Sparkles,
-  Code2, Globe, Palette,
+  Code2, Globe, Palette, FileCode, Terminal,
 } from "lucide-react";
-import { SiOpenai } from "react-icons/si";
+import { SiOpenai, SiCloudflareworkers } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 
 const PLATFORMS = [
+  {
+    id: "cloudflare",
+    name: "Cloudflare Agents",
+    description: "Deploy as a Cloudflare Worker with Durable Objects and persistent state",
+    Icon: SiCloudflareworkers,
+    color: "#f38020",
+    docUrl: "https://developers.cloudflare.com/agents/",
+  },
   {
     id: "chatgpt",
     name: "ChatGPT / OpenAI",
@@ -280,6 +288,8 @@ export function ExportDialog({ agentId, agentName, agentColor = "#4285f4", trigg
 
                 {isLoading ? (
                   <div className="animate-pulse h-64 bg-muted rounded-lg" />
+                ) : selectedPlatform === "cloudflare" && exportData?.files ? (
+                  <CloudflarePreview data={exportData} />
                 ) : (
                   <pre
                     className="bg-muted/50 border rounded-lg p-4 text-xs font-mono overflow-auto max-h-96 whitespace-pre-wrap"
@@ -300,7 +310,7 @@ export function ExportDialog({ agentId, agentName, agentColor = "#4285f4", trigg
                       className="inline-flex items-center gap-1 text-xs text-primary"
                       data-testid="link-export-docs"
                     >
-                      <ExternalLink className="w-3 h-3" /> How to import on {platform.name}
+                      <ExternalLink className="w-3 h-3" /> How to deploy on {platform.name}
                     </a>
                   );
                 })()}
@@ -310,5 +320,49 @@ export function ExportDialog({ agentId, agentName, agentColor = "#4285f4", trigg
         </Tabs>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CloudflarePreview({ data }: { data: Record<string, unknown> }) {
+  const [activeFile, setActiveFile] = useState("src/index.ts");
+  const files = data.files as Record<string, string>;
+  const deploySteps = data.deploy_steps as string[];
+  const fileNames = Object.keys(files);
+
+  return (
+    <div className="space-y-3" data-testid="text-export-preview">
+      <div className="flex gap-1 overflow-x-auto pb-1">
+        {fileNames.map((name) => (
+          <button
+            key={name}
+            onClick={() => setActiveFile(name)}
+            className={`shrink-0 px-3 py-1.5 text-xs rounded-md font-mono transition-colors ${
+              activeFile === name
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground"
+            }`}
+            data-testid={`button-file-${name.replace(/[/.]/g, "-")}`}
+          >
+            <FileCode className="w-3 h-3 inline mr-1" />
+            {name}
+          </button>
+        ))}
+      </div>
+      <pre className="bg-muted/50 border rounded-lg p-4 text-xs font-mono overflow-auto max-h-72 whitespace-pre-wrap">
+        {files[activeFile]}
+      </pre>
+      {deploySteps && (
+        <Card className="p-3 bg-muted/30">
+          <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
+            <Terminal className="w-3.5 h-3.5" /> Deploy steps
+          </h4>
+          <ol className="text-xs text-muted-foreground space-y-1 list-none">
+            {deploySteps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+        </Card>
+      )}
+    </div>
   );
 }

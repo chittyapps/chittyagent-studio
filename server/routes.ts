@@ -230,8 +230,137 @@ export async function registerRoutes(
       };
       res.json(exportData);
 
+    } else if (format === "cloudflare") {
+      const systemPrompt = buildSystemPrompt(agent, attachedSkills, workflowNodes);
+      const agentClassName = agent.name.replace(/[^a-zA-Z0-9]/g, "").replace(/^[0-9]/, "A") || "ChittyAgent";
+      const slugName = agent.name.replace(/[^a-zA-Z0-9]+/g, "-").toLowerCase().replace(/^-|-$/g, "");
+
+      const toolFunctions = attachedSkills.map(s => {
+        const fnName = s.name.replace(/[^a-zA-Z0-9_]/g, "_").toLowerCase();
+        return {
+          name: fnName,
+          description: s.description,
+          parameters: { type: "object" as const, properties: {}, required: [] as string[] },
+        };
+      });
+
+      const workerScript = `import { Agent, AgentNamespace } from "agents/ai";
+import OpenAI from "openai";
+
+export class ${agentClassName} extends Agent {
+  system = ${JSON.stringify(systemPrompt)};
+
+  async onConnect() {
+    console.log("Agent connected:", this.name);
+  }
+
+  async onMessage(message) {
+    const userMessage = typeof message === "string" ? message : JSON.stringify(message);
+
+    const openai = new OpenAI({
+      apiKey: this.env.OPENAI_API_KEY,
+      baseURL: this.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+    });
+
+    const history = this.getState("history") || [];
+    history.push({ role: "user", content: userMessage });
+
+    const response = await openai.chat.completions.create({
+      model: this.env.MODEL || "gpt-4o",
+      messages: [
+        { role: "system", content: this.system },
+        ...history.slice(-20),
+      ],
+      tools: ${JSON.stringify(toolFunctions.length > 0 ? toolFunctions.map(t => ({ type: "function", function: t })) : undefined)},
+      max_tokens: 1000,
+    });
+
+    const reply = response.choices[0]?.message?.content || "I could not generate a response.";
+    history.push({ role: "assistant", content: reply });
+    this.setState("history", history.slice(-40));
+
+    return reply;
+  }
+}
+
+export default {
+  async fetch(request, env) {
+    return (env.AGENT as AgentNamespace).fetch(request);
+  },
+};
+`;
+
+      const wranglerConfig = {
+        name: slugName,
+        main: "src/index.ts",
+        compatibility_date: "2025-01-01",
+        compatibility_flags: ["nodejs_compat"],
+        ai: { binding: "AI" },
+        durable_objects: {
+          bindings: [
+            {
+              name: "AGENT",
+              class_name: agentClassName,
+            },
+          ],
+        },
+        migrations: [
+          { tag: "v1", new_classes: [agentClassName] },
+        ],
+        vars: {
+          MODEL: "gpt-4o",
+        },
+      };
+
+      const packageJson = {
+        name: slugName,
+        version: "1.0.0",
+        private: true,
+        scripts: {
+          dev: "wrangler dev",
+          deploy: "wrangler deploy",
+        },
+        dependencies: {
+          agents: "^0.1.0",
+          openai: "^4.0.0",
+        },
+        devDependencies: {
+          wrangler: "^3.100.0",
+          "@cloudflare/workers-types": "^4.0.0",
+          typescript: "^5.0.0",
+        },
+      };
+
+      const exportData = {
+        platform: "cloudflare-agents",
+        format_version: "1.0",
+        name: agent.name,
+        description: agent.description,
+        class_name: agentClassName,
+        files: {
+          "src/index.ts": workerScript,
+          "wrangler.json": JSON.stringify(wranglerConfig, null, 2),
+          "package.json": JSON.stringify(packageJson, null, 2),
+        },
+        deploy_steps: [
+          "1. Create a new directory and save the exported files",
+          "2. Run: npm install",
+          "3. Set secrets: wrangler secret put OPENAI_API_KEY",
+          "4. Dev: wrangler dev",
+          "5. Deploy: wrangler deploy",
+        ],
+        docs_url: "https://developers.cloudflare.com/agents/",
+        metadata: {
+          category: agent.category,
+          trigger: agent.triggerType,
+          skills: attachedSkills.map(s => s.name),
+          source: "ChittyAgent Studio",
+        },
+      };
+      res.json(exportData);
+
     } else {
-      res.status(400).json({ message: "Invalid format. Use: chatgpt, claude, or api" });
+      res.status(400).json({ message: "Invalid format. Use: chatgpt, claude, cloudflare, or api" });
     }
   }));
 
