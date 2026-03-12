@@ -1,9 +1,0 @@
-name = "chittymarket"
-main = "server/index.ts"
-compatibility_date = "2025-12-01"
-
-[site]
-bucket = "./dist/public"
-
-[vars]
-ENVIRONMENT = "production"
