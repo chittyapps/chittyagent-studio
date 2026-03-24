@@ -117,5 +117,6 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  }
+  },
+  "description": "Visual AI agent builder and management interface for ChittyOS"
 }
