@@ -1,8 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { syncGithubRepos } from "./seed";
 import { createAgentSchema, updateAgentSchema } from "@shared/schema";
+import { provisionNeonDatabase } from "./neon";
 
 function asyncRoute(handler: (req: any, res: any) => Promise<any>) {
   return async (req: any, res: any) => {
@@ -152,6 +154,67 @@ export async function registerRoutes(
     await syncGithubRepos();
     const repos = await storage.getGithubRepos();
     res.json({ success: true, count: repos.length });
+  }));
+
+  // === CHITTYPRO MARKETPLACE ROUTES ===
+
+  // Note: Hardcoded development user ID. In production, extract from JWT/session.
+  const DEV_USER_ID = "00000000-0000-0000-0000-000000000001";
+
+  app.get("/api/keys", asyncRoute(async (_req, res) => {
+    const keys = await storage.getApiKeys(DEV_USER_ID);
+    res.json(keys);
+  }));
+
+  app.post("/api/keys", asyncRoute(async (_req, res) => {
+    // 1. Generate secure API Key
+    const rawKey = `chitty_live_${crypto.randomBytes(24).toString("hex")}`;
+    const prefix = rawKey.substring(0, 16) + "...";
+    
+    // 2. Hash it before storing to database (zero-knowledge architecture)
+    const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
+
+    const apiKey = await storage.createApiKey({
+      userId: DEV_USER_ID,
+      keyHash,
+      prefix,
+      status: "active",
+    });
+
+    // 3. We ONLY return the raw key on creation!
+    res.status(201).json({ ...apiKey, rawKey });
+  }));
+
+  app.get("/api/subscriptions", asyncRoute(async (_req, res) => {
+    const subs = await storage.getSubscriptions(DEV_USER_ID);
+    res.json(subs);
+  }));
+
+  app.post("/api/subscriptions", asyncRoute(async (req, res) => {
+    const { planId } = req.body;
+    if (!planId) return res.status(400).json({ message: "planId is required" });
+
+    // Note: In reality, this route is hit by the Stripe Webhook 
+    // after a checkout.session.completed event!
+    const subscription = await storage.createSubscription({
+      userId: DEV_USER_ID,
+      planId,
+      status: "active",
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // +30 days
+    });
+
+    // Automatically provision a scale-to-zero Neon database for this tenant!
+    let dbCredentials = null;
+    try {
+      dbCredentials = await provisionNeonDatabase(DEV_USER_ID);
+    } catch (err) {
+      console.error("Non-fatal: Failed to provision Neon DB", err);
+    }
+    
+    res.status(201).json({
+      subscription,
+      database: dbCredentials
+    });
   }));
 
   return httpServer;

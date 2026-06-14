@@ -4,7 +4,10 @@ import {
   type AgentRun, type InsertAgentRun,
   type Skill, type InsertSkill,
   type GithubRepo, type InsertGithubRepo,
+  type ApiKey, type InsertApiKey,
+  type Subscription, type InsertSubscription,
   users, agents, agentRuns, skills, githubRepos,
+  apiKeys, subscriptions,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -36,6 +39,13 @@ export interface IStorage {
   getGithubRepos(): Promise<GithubRepo[]>;
   createGithubRepo(repo: InsertGithubRepo): Promise<GithubRepo>;
   clearGithubRepos(): Promise<void>;
+
+  getApiKeys(userId: string): Promise<ApiKey[]>;
+  createApiKey(key: InsertApiKey): Promise<ApiKey>;
+  revokeApiKey(id: string): Promise<void>;
+
+  getSubscriptions(userId: string): Promise<Subscription[]>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -156,6 +166,28 @@ export class DatabaseStorage implements IStorage {
 
   async clearGithubRepos(): Promise<void> {
     await db.delete(githubRepos);
+  }
+
+  async getApiKeys(userId: string): Promise<ApiKey[]> {
+    return db.select().from(apiKeys).where(eq(apiKeys.userId, userId));
+  }
+
+  async createApiKey(data: InsertApiKey): Promise<ApiKey> {
+    const [apiKey] = await db.insert(apiKeys).values(data).returning();
+    return apiKey;
+  }
+
+  async revokeApiKey(id: string): Promise<void> {
+    await db.update(apiKeys).set({ status: "revoked" }).where(eq(apiKeys.id, id));
+  }
+
+  async getSubscriptions(userId: string): Promise<Subscription[]> {
+    return db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+  }
+
+  async createSubscription(data: InsertSubscription): Promise<Subscription> {
+    const [sub] = await db.insert(subscriptions).values(data).returning();
+    return sub;
   }
 }
 

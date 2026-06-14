@@ -24,10 +24,13 @@ export default function Skills() {
 
   const installMutation = useMutationWithToast<void, string>({
     mutationFn: async (skillId: string) => {
-      await apiRequest("POST", `/api/skills/${skillId}/install`);
+      // Create subscription, which automatically provisions Neon DB
+      await apiRequest("POST", `/api/subscriptions`, { planId: skillId });
+      // Generate API key automatically for demo purposes
+      await apiRequest("POST", `/api/keys`);
     },
-    invalidateKeys: [["/api/skills"]],
-    successMessage: { title: "Skill installed", description: "This skill is now available for your agents." },
+    invalidateKeys: [["/api/skills"], ["/api/subscriptions"], ["/api/keys"]],
+    successMessage: { title: "Subscription Active!", description: "Check your Dashboard for your API Key and Neon Database credentials." },
   });
 
   const filtered = allSkills?.filter(
@@ -48,11 +51,11 @@ export default function Skills() {
 
       <div className="flex items-center gap-3 mb-2">
         <Puzzle className="w-5 h-5 text-primary" />
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">Skills</h1>
-        <Badge variant="secondary" className="text-xs">ChittyOS Ecosystem</Badge>
+        <h1 className="text-2xl font-bold" data-testid="text-page-title">API Marketplace</h1>
+        <Badge variant="secondary" className="text-xs">ChittyPro Enterprise</Badge>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Reusable capabilities from the ChittyOS ecosystem that agents can leverage
+        Subscribe to enterprise B2B agents and APIs. All subscriptions automatically provision a dedicated Neon scale-to-zero database.
       </p>
 
       <div className="flex items-center gap-2 mb-6 flex-wrap">
@@ -159,7 +162,7 @@ export default function Skills() {
                     ) : (
                       <Download className="w-3 h-3 mr-1" />
                     )}
-                    Install ({skill.installCount})
+                    Subscribe ($49/mo)
                   </Button>
                   {skill.repoUrl && (
                     <Button

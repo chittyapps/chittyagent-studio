@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createAgentSchema, updateAgentSchema } from "../shared/schema";
+import { createAgentSchema, updateAgentSchema, insertApiKeySchema, insertSubscriptionSchema } from "../shared/schema";
 
 describe("Shared Validation Schemas", () => {
   describe("createAgentSchema", () => {
@@ -169,6 +169,25 @@ describe("Shared Validation Schemas", () => {
         const result = updateAgentSchema.safeParse(partial);
         expect(result.success).toBe(true);
       }
+    });
+  });
+
+  describe("ChittyPro Market Schemas", () => {
+    it("validates API Key insertions", () => {
+      const result = insertApiKeySchema.safeParse({
+        userId: "user-123",
+        keyHash: "hashed_value",
+        prefix: "chitty_live_abc123",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("validates Subscription insertions", () => {
+      const result = insertSubscriptionSchema.safeParse({
+        userId: "user-123",
+        planId: "prod_turbotenant",
+      });
+      expect(result.success).toBe(true);
     });
   });
 });

@@ -7,6 +7,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -146,3 +147,37 @@ export const insertGithubRepoSchema = createInsertSchema(githubRepos).omit({
 
 export type InsertGithubRepo = z.infer<typeof insertGithubRepoSchema>;
 export type GithubRepo = typeof githubRepos.$inferSelect;
+
+export const apiKeys = pgTable("api_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  keyHash: text("key_hash").notNull(),
+  prefix: text("prefix").notNull(),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+export type ApiKey = typeof apiKeys.$inferSelect;
+
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  planId: text("plan_id").notNull(),
+  status: text("status").notNull().default("active"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;

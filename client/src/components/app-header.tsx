@@ -22,7 +22,7 @@ export function AppHeader() {
           <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-sm hidden sm:inline">ChittyAgent Studio</span>
+          <span className="font-semibold text-sm hidden sm:inline">ChittyPro Market</span>
         </button>
 
         <div className="relative max-w-md flex-1 hidden sm:block">
@@ -46,7 +46,16 @@ export function AppHeader() {
           data-testid="button-nav-skills"
         >
           <Puzzle className="w-4 h-4 mr-1" />
-          <span className="hidden sm:inline">Skills</span>
+          <span className="hidden sm:inline">Market</span>
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          data-testid="button-nav-dashboard"
+        >
+          <Search className="w-4 h-4 mr-1" />
+          <span className="hidden sm:inline">Dashboard</span>
         </Button>
         <Button
           size="sm"
