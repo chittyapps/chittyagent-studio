@@ -1,5 +1,5 @@
 {
-  "name": "rest-express",
+  "name": "chittypro-market",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -118,5 +118,5 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
   },
-  "description": "Visual AI agent builder and management interface for ChittyOS"
+  "description": "B2B Storefront and Developer Marketplace for ChittyPro APIs"
 }
