@@ -151,10 +151,22 @@ export type GithubRepo = typeof githubRepos.$inferSelect;
 export const apiKeys = pgTable("api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  keyHash: text("key_hash").notNull(),
+  keyHash: text("key_hash").notNull().unique(),
   prefix: text("prefix").notNull(),
   status: text("status").notNull().default("active"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+});
+
+// Telemetry & Observability: Track every API request to monitor failure rates and churn
+export const apiLogs = pgTable("api_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  apiKeyId: varchar("api_key_id").references(() => apiKeys.id).notNull(),
+  endpoint: text("endpoint").notNull(),
+  status: integer("status").notNull(),
+  latencyMs: integer("latency_ms").notNull(),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertApiKeySchema = createInsertSchema(apiKeys).omit({

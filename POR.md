@@ -25,10 +25,21 @@ The `ChittyAgent-Studio` repository has officially pivoted from an internal no-c
 - **Platform Arbitrage:** Building native templates in Notion and CRMs (GoHighLevel) that require an active ChittyPro subscription to function.
 - **Upwork Drop-Servicing:** Using our own APIs to fulfill manual data extraction contracts, then upselling the client onto a recurring SaaS subscription.
 
-## 5. Security & Governance Compliance
+## 5. Stealth & Anti-Lockout Architecture
+- **Volume Ramp-Up:** New tenant subscriptions undergo a programmatic "warm-up" period, slowly scaling API calls to upstream platforms to build trust and avoid anomalous spike detection.
+- **Session-Synchronized Scraping:** We track customer login activity via webhooks. Instead of rigid cron jobs, Apify executors fire asynchronously during or immediately following the customer's actual human session, perfectly masking automation within legitimate traffic patterns.
+
+## 6. Security & Governance Compliance
 - **Zero-Knowledge API Keys:** Raw keys are generated, hashed (`sha256`), and returned to the developer exactly once. Only hashes are stored in the Drizzle DB.
 - **The Pentad Governance:** The Cloudflare API Gateway (`chittyagent-pro`) enforces strict Perceive-Evaluate-Navigate-Transact-Attest execution loops before fulfilling downstream execution requests.
 - **Tenant Isolation:** Client data must never be co-mingled; enforced securely via the Neon database-per-tenant architecture.
+
+## 7. The Legal & Compliance Shield: Ephemeral Code Duplication
+To completely insulate ChittyPro from Data Processor liability (GDPR/CCPA, SPI handling) and upstream scraping ToS violations, we employ an **Ephemeral Code Duplication Architecture**:
+- **We Do Not Parse Data:** ChittyPro does not parse, store, or process any customer data natively.
+- **Leased Blueprints:** The customer pays a subscription fee to temporarily duplicate our automation code into a locked, single-tenant computing instance (e.g., an isolated Apify container) that acts strictly on their behalf.
+- **Zero Control & Auto-Destruction:** We do not possess "control" over the execution instance. Once the data pipeline finishes executing, the container, its memory, and its IP environment automatically self-destruct.
+- **Opt-In Telemetry:** The ephemeral instance only sends strictly limited, non-PII telemetry (Status Codes, Latency) back to the ChittyPro Gateway for billing purposes. Customers must explicitly opt-in to share deeper error logs (e.g., DOM dumps, trace payloads) if they require technical support for broken parsers.
 
 ---
 *Status: Approved and in active execution.*
