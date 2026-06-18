@@ -46,6 +46,9 @@ export interface IStorage {
 
   getSubscriptions(userId: string): Promise<Subscription[]>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+
+  getAllApiKeys(): Promise<ApiKey[]>;
+  logApiUsage(data: { apiKeyId: string, endpoint: string, status: number, latencyMs: number }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -188,6 +191,15 @@ export class DatabaseStorage implements IStorage {
   async createSubscription(data: InsertSubscription): Promise<Subscription> {
     const [sub] = await db.insert(subscriptions).values(data).returning();
     return sub;
+  }
+
+  async getAllApiKeys(): Promise<ApiKey[]> {
+    return db.select().from(apiKeys);
+  }
+
+  async logApiUsage(data: { apiKeyId: string, endpoint: string, status: number, latencyMs: number }): Promise<void> {
+    const { apiLogs } = await import("@shared/schema");
+    await db.insert(apiLogs).values(data);
   }
 }
 

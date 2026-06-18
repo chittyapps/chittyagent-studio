@@ -41,6 +41,138 @@
       "sourceType": "github",
       "computedHash": "342df93f481a0dba919f372d6c7b40d2b4bf5b51dd24363aea2e5d0bae27a6fa"
     },
+    "capability-governor": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-governance/skills/capability-governor/SKILL.md",
+      "computedHash": "2c47d67dd98676350a1e8cb5d6357ae784ef193072b3f5e4a52c6135cdd23bdd"
+    },
+    "capability-registry-audit": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-governance/skills/capability-registry-audit/SKILL.md",
+      "computedHash": "1d35c701a882a55d59e4ba51f7b48a7ba9c5f79f57434244a8572aecf2b988aa"
+    },
+    "cast": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-mcp/skills/cast/SKILL.md",
+      "computedHash": "bd40df8c8e36ca604fbbb06b9615a56714f13e4c590021a9fec865a96f87d3a4"
+    },
+    "checkpoint": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/checkpoint/SKILL.md",
+      "computedHash": "8e0d1be19bb631caf5d0fb5c1c0778bae6c35da4753762599f3684d81ab5b452"
+    },
+    "chico": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/chico/SKILL.md",
+      "computedHash": "ca93434a9a424363d1a460eadcb58699c33bde0427edaadbbdc38b7af887b783"
+    },
+    "chitty-autonomy": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy/SKILL.md",
+      "computedHash": "580a0e2f6f9f83f1ea8201285a60b9f3d56b422ef2e3ef72f74a7d6dd93863b4"
+    },
+    "chitty-autonomy-affirm": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-affirm/SKILL.md",
+      "computedHash": "366937d168402d767dbb49fe9ad0317faedd663a433f13b9d2d8d0119753702d"
+    },
+    "chitty-autonomy-cicd": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-cicd/SKILL.md",
+      "computedHash": "958c1fbecaada7c3467056e718604f1dd2067dc862621761f2ec6d8732c46db4"
+    },
+    "chitty-autonomy-discover": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-discover/SKILL.md",
+      "computedHash": "5842e1cdbceeaa204deb0c45501d344c5d7a7f1d9b910411ffb007c1e99cb17b"
+    },
+    "chitty-autonomy-generate": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-generate/SKILL.md",
+      "computedHash": "7012c7f1b5e833525806b944456e5ffcd47da0d5fce24c5b48861edb0e46d631"
+    },
+    "chitty-autonomy-implement": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-implement/SKILL.md",
+      "computedHash": "96de7072bbc3430b71ef79e19f210432503c921c8620b0c98a449736f73e27d8"
+    },
+    "chitty-autonomy-plan": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-plan/SKILL.md",
+      "computedHash": "1a711cd595521f6d0394fb546f988981a2469219cc4eaf40ff1a3cd9d8f5d854"
+    },
+    "chitty-autonomy-ship": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-ship/SKILL.md",
+      "computedHash": "c288c59501bd0df0fc1f5c9cdc9483f1078327113a4c1260293456340e722e15"
+    },
+    "chitty-autonomy-tidy": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyagent-autobot/skills/chitty-autonomy-tidy/SKILL.md",
+      "computedHash": "38bbdb76f968a0649f0540629991da525d58da3bfa1a4d43c31cef5689969c08"
+    },
+    "chitty-cleanup": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/chitty-cleanup/SKILL.md",
+      "computedHash": "cb6f20e504d197f62f3d2932c45457dd66e28a6104bc81b4a5671a7ba9085bc6"
+    },
+    "chitty-deploy": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/chitty-deploy/SKILL.md",
+      "computedHash": "0e5fb717cfe0beb6b3ad0a0965208b25139ee522a6ea766c238e6373a7ea31c2"
+    },
+    "chitty-health": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/chitty-health/SKILL.md",
+      "computedHash": "36d913e5ac358dbee946f5707145f7d17e1849f0cf7949d6a104b67622786451"
+    },
+    "chitty-pipelines": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/chitty-pipelines/SKILL.md",
+      "computedHash": "9edaa7f12e8f42606205588f13f62a645a8c89151505d9095bbd9f8a3dd8f0b1"
+    },
+    "chitty-registry": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/chitty-registry/SKILL.md",
+      "computedHash": "6ce9afa334e1591f83b2189ec1e32602325156c5aa0d3914f45f12f5533149db"
+    },
+    "chittycontext": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/chittycontext/SKILL.md",
+      "computedHash": "db58b16a0559f3bcfb5f809301387dbaa98b98b77e0c694285980b71080a94b6"
+    },
+    "chittyos-compliance": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/chittyos-compliance/SKILL.md",
+      "computedHash": "d0ad98ce1b615dac5f3f8bc8533af58a42cbddba0acbee8aaf7f2e6bff6844a7"
+    },
+    "chittyxl": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/chittyxl/SKILL.md",
+      "computedHash": "6d5c1de4b38b0ee21fe6cd6b30f57328296831673ccd64b78da24d65a008f0c1"
+    },
     "command-creator": {
       "source": "softaworks/agent-toolkit",
       "sourceType": "github",
@@ -66,10 +198,40 @@
       "sourceType": "github",
       "computedHash": "605476190149d3ef518d0e787788ceba47600dc9d63b96b120edba80edcf7998"
     },
+    "dispute": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-legal/skills/dispute/SKILL.md",
+      "computedHash": "2715380f08e8955f89d51caf450eac354307af4cdc09d0d002b1727948c9d59b"
+    },
+    "docket": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-legal/skills/docket/SKILL.md",
+      "computedHash": "475f07a602f014a673c147cc28f76a6ba092bc30b05d5e98a02b7abee89b10ce"
+    },
     "enhance-prompt": {
       "source": "google-labs-code/stitch-skills",
       "sourceType": "github",
       "computedHash": "71cc23e9ec5fc6361e12453495fa8c683f6cf26f3efaf9b230b0f43e0a32cc96"
+    },
+    "evidence-collect": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-legal/skills/evidence-collect/SKILL.md",
+      "computedHash": "ddc8985e54fb36c963c0760c4dd7ec0976bb5910e3a0640a2069b8a73c279706"
+    },
+    "evidence-egress": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-legal/skills/evidence-egress/SKILL.md",
+      "computedHash": "59810a32686aba3b511c995f4b4e85ab1a27b0d894b34527c087085e6ecad35a"
+    },
+    "fact-governance": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-legal/skills/fact-governance/SKILL.md",
+      "computedHash": "f2d0b84f966c1b6deb4db26d78924aa02caec662a4dc63c46fc0660e18352b21"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
@@ -96,6 +258,12 @@
       "sourceType": "github",
       "computedHash": "e8df22024090440fce624e6a99faca4b66aa267a428b5a63a0c0416fa4eb2629"
     },
+    "goal-creator": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-core/skills/goal-creator/SKILL.md",
+      "computedHash": "db9ba1033fce1cdadd9c74aeaba2bea4247d2b14d587ddad62185323cf637f53"
+    },
     "internal-comms": {
       "source": "anthropics/skills",
       "sourceType": "github",
@@ -105,6 +273,12 @@
       "source": "inf-sh/skills",
       "sourceType": "github",
       "computedHash": "7dae6c21fddab044c29b05765f9a9bb6218efc05caa481d54ac16679049fd300"
+    },
+    "market": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittymarket-manager/skills/market/SKILL.md",
+      "computedHash": "931301b2342f7b533cfdf4fc9181cd5c672036c68e5a562422b99467b01e202b"
     },
     "mcp-builder": {
       "source": "anthropics/skills",
@@ -162,9 +336,10 @@
       "computedHash": "27156d103697411bba81520fef469e77bfba4c65d904c841e4965a158d531fbd"
     },
     "skill-creator": {
-      "source": "anthropics/skills",
+      "source": "chittyos/chittymarket",
       "sourceType": "github",
-      "computedHash": "9b03bb78ec5c81c4e0546dbb78cfc970368c72dcae5482e8c59690175abbc8e7"
+      "skillPath": "plugins/chittyos-core/skills/skill-creator/SKILL.md",
+      "computedHash": "06ca798d0faa06c1ecef7c2513b6d61f5dec36bccf7693b5012d0e25a1874780"
     },
     "skill-lookup": {
       "source": "f/awesome-chatgpt-prompts",
@@ -235,6 +410,12 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    },
+    "wrangler-audit": {
+      "source": "chittyos/chittymarket",
+      "sourceType": "github",
+      "skillPath": "plugins/chittyos-devops/skills/wrangler-audit/SKILL.md",
+      "computedHash": "669e470b938fe66676a7b73867f901fe42749f8f8fe75c5da55d994ee9db6c49"
     },
     "writing-plans": {
       "source": "obra/superpowers",

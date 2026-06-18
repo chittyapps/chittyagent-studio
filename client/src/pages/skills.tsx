@@ -5,6 +5,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { iconMap } from "@/lib/icons";
 import { LANG_COLORS, SKILL_CATEGORIES } from "@/lib/constants";
 import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
@@ -149,21 +160,48 @@ export default function Skills() {
                 )}
 
                 <div className="flex items-center gap-2 mt-auto pt-1">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => installMutation.mutate(skill.id)}
-                    disabled={installMutation.isPending}
-                    className="flex-1"
-                    data-testid={`button-install-skill-${skill.id}`}
-                  >
-                    {installMutation.isPending ? (
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    ) : (
-                      <Download className="w-3 h-3 mr-1" />
-                    )}
-                    Subscribe ($49/mo)
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={installMutation.isPending}
+                        className="flex-1"
+                        data-testid={`button-subscribe-skill-${skill.id}`}
+                      >
+                        {installMutation.isPending ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Download className="w-3 h-3 mr-1" />
+                        )}
+                        Subscribe ($49/mo)
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Liability & Consent Agreement</AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-3 pt-2 text-foreground">
+                          <p>
+                            <strong>ChittyPro operates purely as an automation proxy acting on your behalf.</strong> By subscribing, you acknowledge and accept the risks associated with upstream automation.
+                          </p>
+                          <div className="bg-destructive/10 text-destructive p-3 rounded-md text-xs font-medium space-y-2">
+                            <p>• We are <strong>not liable</strong> for upstream Terms of Service violations or account suspensions.</p>
+                            <p>• Upstream API availability and DOM stability are not guaranteed.</p>
+                            <p>• If the upstream portal locks your session, you must manually re-authenticate.</p>
+                          </div>
+                          <p className="pt-2 text-muted-foreground text-sm">
+                            Do you agree to assume these risks and proceed to checkout?
+                          </p>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Decline</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => installMutation.mutate(skill.id)}>
+                          I Agree, Proceed
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   {skill.repoUrl && (
                     <Button
                       size="icon"
