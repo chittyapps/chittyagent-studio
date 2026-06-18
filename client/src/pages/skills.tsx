@@ -5,6 +5,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { iconMap } from "@/lib/icons";
 import { LANG_COLORS, SKILL_CATEGORIES } from "@/lib/constants";
 import { useMutationWithToast } from "@/hooks/use-mutation-with-toast";
@@ -24,10 +35,13 @@ export default function Skills() {
 
   const installMutation = useMutationWithToast<void, string>({
     mutationFn: async (skillId: string) => {
-      await apiRequest("POST", `/api/skills/${skillId}/install`);
+      // Create subscription, which automatically provisions Neon DB
+      await apiRequest("POST", `/api/subscriptions`, { planId: skillId });
+      // Generate API key automatically for demo purposes
+      await apiRequest("POST", `/api/keys`);
     },
-    invalidateKeys: [["/api/skills"]],
-    successMessage: { title: "Skill installed", description: "This skill is now available for your agents." },
+    invalidateKeys: [["/api/skills"], ["/api/subscriptions"], ["/api/keys"]],
+    successMessage: { title: "Subscription Active!", description: "Check your Dashboard for your API Key and Neon Database credentials." },
   });
 
   const filtered = allSkills?.filter(
@@ -48,11 +62,11 @@ export default function Skills() {
 
       <div className="flex items-center gap-3 mb-2">
         <Puzzle className="w-5 h-5 text-primary" />
-        <h1 className="text-2xl font-bold" data-testid="text-page-title">Skills</h1>
-        <Badge variant="secondary" className="text-xs">ChittyOS Ecosystem</Badge>
+        <h1 className="text-2xl font-bold" data-testid="text-page-title">API Marketplace</h1>
+        <Badge variant="secondary" className="text-xs">ChittyPro Enterprise</Badge>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
-        Reusable capabilities from the ChittyOS ecosystem that agents can leverage
+        Subscribe to enterprise B2B agents and APIs. All subscriptions automatically provision a dedicated Neon scale-to-zero database.
       </p>
 
       <div className="flex items-center gap-2 mb-6 flex-wrap">
@@ -146,21 +160,48 @@ export default function Skills() {
                 )}
 
                 <div className="flex items-center gap-2 mt-auto pt-1">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => installMutation.mutate(skill.id)}
-                    disabled={installMutation.isPending}
-                    className="flex-1"
-                    data-testid={`button-install-skill-${skill.id}`}
-                  >
-                    {installMutation.isPending ? (
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    ) : (
-                      <Download className="w-3 h-3 mr-1" />
-                    )}
-                    Install ({skill.installCount})
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={installMutation.isPending}
+                        className="flex-1"
+                        data-testid={`button-subscribe-skill-${skill.id}`}
+                      >
+                        {installMutation.isPending ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Download className="w-3 h-3 mr-1" />
+                        )}
+                        Subscribe ($49/mo)
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Liability & Consent Agreement</AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-3 pt-2 text-foreground">
+                          <p>
+                            <strong>ChittyPro operates purely as an automation proxy acting on your behalf.</strong> By subscribing, you acknowledge and accept the risks associated with upstream automation.
+                          </p>
+                          <div className="bg-destructive/10 text-destructive p-3 rounded-md text-xs font-medium space-y-2">
+                            <p>• We are <strong>not liable</strong> for upstream Terms of Service violations or account suspensions.</p>
+                            <p>• Upstream API availability and DOM stability are not guaranteed.</p>
+                            <p>• If the upstream portal locks your session, you must manually re-authenticate.</p>
+                          </div>
+                          <p className="pt-2 text-muted-foreground text-sm">
+                            Do you agree to assume these risks and proceed to checkout?
+                          </p>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Decline</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => installMutation.mutate(skill.id)}>
+                          I Agree, Proceed
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   {skill.repoUrl && (
                     <Button
                       size="icon"
